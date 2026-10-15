@@ -1,0 +1,7 @@
+set_pin_assignment { clk }         { LOCATION = K14; IOSTANDARD = LVCMOS33; PULLTYPE = NONE; }
+set_pin_assignment { key_s1_n }    { LOCATION = F7;  IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { key_s2_n }    { LOCATION = E7;  IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { key_reset_n } { LOCATION = H14; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { seg7_sclk }   { LOCATION = T14; IOSTANDARD = LVCMOS33; DRIVESTRENGTH = 8; PULLTYPE = NONE; }
+set_pin_assignment { seg7_rclk }   { LOCATION = R12; IOSTANDARD = LVCMOS33; DRIVESTRENGTH = 8; PULLTYPE = NONE; }
+set_pin_assignment { seg7_dio }    { LOCATION = R14; IOSTANDARD = LVCMOS33; DRIVESTRENGTH = 8; PULLTYPE = NONE; }

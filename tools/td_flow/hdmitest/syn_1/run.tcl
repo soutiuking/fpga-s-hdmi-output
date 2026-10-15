@@ -1,0 +1,2 @@
+source ./hdmitest.tcl
+exit

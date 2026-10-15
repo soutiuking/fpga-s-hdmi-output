@@ -1,0 +1,2 @@
+FATAL: D:\hdmi\redesign\sim\tb_jpeg_input_gaps.v:46: input gap corrupted dimensions after word byte 18672: width=0000 height=0000
+       Time: 793760000 Scope: tb_jpeg_input_gaps

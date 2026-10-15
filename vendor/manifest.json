@@ -1,0 +1,26 @@
+[
+  {
+    "file": "python-3.12.10-embed-amd64.zip",
+    "sha256": "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3",
+    "url": "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip",
+    "bytes": 11133606
+  },
+  {
+    "file": "pillow-11.3.0-cp312-cp312-win_amd64.whl",
+    "sha256": "a6444696fce635783440b7f7a9fc24b3ad10a9ea3f0ab66c5905be1c19ccf17d",
+    "url": "https://pypi.org/project/Pillow/11.3.0/",
+    "bytes": 6986324
+  },
+  {
+    "file": "imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
+    "sha256": "02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a",
+    "url": "https://pypi.org/project/imageio-ffmpeg/0.6.0/",
+    "bytes": 31246824
+  },
+  {
+    "file": "iverilog-windows-amd64.zip",
+    "sha256": "e0392c61ceadda7d01f951eb60b9545754e3a64c042dea35cc9a4bfe6cd7c686",
+    "url": "https://github.com/FPGAwars/toolchain-iverilog/releases (toolchain 1.1.1, Icarus 10.1)",
+    "bytes": 6929105
+  }
+]

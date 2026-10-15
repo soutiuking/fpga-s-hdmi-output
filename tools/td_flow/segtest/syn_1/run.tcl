@@ -1,0 +1,2 @@
+source ./segtest.tcl
+exit
