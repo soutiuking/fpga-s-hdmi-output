@@ -113,7 +113,8 @@ def main():
         work = Path(temp)
         target = work/'frame.vvp'
         exe = args.iverilog.resolve()
-        vvp = exe.with_name('vvp.exe' if exe.suffix == '.exe' else 'vvp')
+        import sys
+        vvp = exe.with_name('vvp.exe' if sys.platform == 'win32' else 'vvp')
         subprocess.run([str(exe), '-g2012', '-s', 'tb_jpeg_display_completion', '-o', str(target),
                         str(root/'sim/tb_jpeg_display_completion.v'),
                         str(root/'user_source/hdl_source/tfmedia3/jpeg_decode_pipeline.v'),

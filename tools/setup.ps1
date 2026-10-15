@@ -40,12 +40,16 @@ $taskPython = Join-Path $taskBundle 'python/python.exe'
 if ($LASTEXITCODE -ne 0) { throw 'Portable Python check failed' }
 $taskFfmpeg = Get-ChildItem -LiteralPath (Join-Path $taskBundle 'python/Lib/site-packages/imageio_ffmpeg/binaries') -Filter 'ffmpeg*.exe' | Select-Object -First 1
 if (!$taskFfmpeg) { throw 'FFmpeg binary missing' }
-$taskIcarus = Join-Path $taskBundle 'iverilog/bin/iverilog.exe'
+$taskIcarus = Join-Path $taskBundle 'iverilog/bin/iverilog.cmd'
+# Icarus 10.1 does not quote an absolute install prefix containing spaces.
+# Run it from bin/ with a relative backend prefix instead.
+$taskWrapper = "@echo off`r`npushd `"%~dp0`"`r`n`"%~dp0iverilog.exe`" -B ..\lib\ivl %*`r`nset `"task_ivl_status=%errorlevel%`"`r`npopd`r`nexit /b %task_ivl_status%`r`n"
+[System.IO.File]::WriteAllText($taskIcarus,$taskWrapper,[System.Text.Encoding]::ASCII)
 & $taskFfmpeg.FullName -version | Select-Object -First 1
 if ($LASTEXITCODE -ne 0) { throw 'FFmpeg check failed' }
 & $taskIcarus -V *> (Join-Path $taskBundle 'iverilog-version.txt')
 if ($LASTEXITCODE -ne 0) { throw 'Icarus check failed' }
 $taskFfmpegRelative = $taskRelative + '/python/Lib/site-packages/imageio_ffmpeg/binaries/' + $taskFfmpeg.Name
-$taskValue = @{python="$taskRelative/python/python.exe";ffmpeg=$taskFfmpegRelative;iverilog="$taskRelative/iverilog/bin/iverilog.exe"}
+$taskValue = @{python="$taskRelative/python/python.exe";ffmpeg=$taskFfmpegRelative;iverilog="$taskRelative/iverilog/bin/iverilog.cmd"}
 [System.IO.File]::WriteAllText($taskConfig, ($taskValue | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
 Write-Host 'Offline initialization complete. No pip or external tool directory is needed.'
