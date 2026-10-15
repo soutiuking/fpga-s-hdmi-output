@@ -2,7 +2,7 @@
 
 基于安路 **EG4S20BG256** 板卡，使用自定义 **TFMEDIA3 裸卡文件系统**，通过 SPI 读取 TF 卡，在 FPGA 中完成 JPEG 解码、PCM 音频输出和 HDMI 显示。媒体规格为 **640×480、25 fps**，支持图片轮播、视频自动切换、手动切换和暂停。
 
-当前实板验收固件为 [08_player_avsync.bit](firmware/08_player_avsync.bit)，用户于 2026-10-15 测试后反馈“我很满意”。本文档描述整理后的独立工程；历史调试过程见 [验证记录](docs/history/验证结果.md)。
+当前实板验收固件为 [08_player_avsync.bit](firmware/08_player_avsync.bit)，我很满意。本文档描述整理后的独立工程；历史调试过程见 [验证记录](docs/history/验证结果.md)。
 
 ## 解压或 Git 拉取后开始使用
 
