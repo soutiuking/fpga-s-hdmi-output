@@ -1,0 +1,41 @@
+PASS: ZIP release manifest matches every delivered file
+PASS: 202 relative TD references, accepted bitstream and offline dependency hashes
+PASS: fixed Huffman profile accepts standard tables, rejects optimized tables/restart intervals
+Convert 1/1: bars.png
+{
+  "path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\tfmedia3-tests-hggh1p5l\\pictures.img",
+  "sectors": 17,
+  "bytes": 8704,
+  "media": [
+    {
+      "index": 0,
+      "type": "image",
+      "frames": 1,
+      "jpeg_bytes": 6329,
+      "max_frame_bytes": 6329,
+      "audio_bytes": 0,
+      "estimated_stream_bytes_per_second": 0
+    }
+  ]
+}
+PASS TFMEDIA3 catalog parser
+PASS: RTL catalog rejects corrupted superblock CRC
+PASS: first init_done request reaches CMD17 once
+PASS: 4 pages change only at vblank and retire after SDRAM read ACK
+PASS: 55.72-second/1393-frame audio timeline has zero accumulated sample drift, pause and stalled PCM hold time
+PASS: last in-flight PCM sample is counted at pause edge so EOF cannot hang
+PASS: silent video uses 25-fps reader clock and completes after its last full period
+PASS: PCM ring wrap/sample ordering, exact consumed playhead, pause and clean EOF
+PASS: 960 lines, 640 pixels/EOL, 2 SOF; 4388 595 packets and latch spacing
+PASS: jpeg_sram_dma alignment, odd-tail and 64-KiB cases
+PASS: timeout freezes write-ACK, SRAM, feed, decode and SDRAM-finish stages/flags/word index
+PASS: JPEG EOI consumed for all four final-word byte alignments
+PASS: JPEG dimensions survive SRAM input gaps and FF-stuffed word rollover
+PASS: JPEG dimensions survive SRAM input gaps and FF-stuffed word rollover
+PASS: actual top clears stalled JPEG on media change and accepts subsequent media twice
+PASS: actual top holds future frames until PCM playhead, respects pause and clears pending pages on media switch
+PASS: pause holds presentation while next frame is cached
+PASS: 3 video frames cached/presented in order, final frame retained
+PASS: automatic video completion/reload and six frame presentations with audio SD traffic
+PASS: late cached frame discarded, direct seek 1 -> 9, spare SRAM ownership and last-frame clamp preserved
+PASS: host pack/inspect, CRC rejection and requested RTL tests
