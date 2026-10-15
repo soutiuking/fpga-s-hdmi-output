@@ -15,6 +15,8 @@ def main():
     if status.strip():
         raise SystemExit('Commit all deliverable changes before packaging. Check git status.')
     commit=git('rev-parse','HEAD').decode().strip()
+    if any(line.startswith(b'160000 ') for line in git('ls-tree','-r','HEAD').splitlines()):
+        raise SystemExit('Embedded Git repository detected. Vendor actual source files before packaging.')
     paths=[p.decode('utf-8') for p in git('ls-tree','-r','--name-only','-z','HEAD').split(b'\0') if p]
     output=ROOT/'dist';output.mkdir(exist_ok=True)
     name=f'useing-08-{datetime.now():%Y%m%d-%H%M%S-%f}-{commit[:8]}.zip'
