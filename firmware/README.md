@@ -5,11 +5,31 @@
 | [01_segtest.bit](01_segtest.bit) | 八位数码管测试 | 历史测试固件 |
 | [02_hdmitest.bit](02_hdmitest.bit) | HDMI 连线与显示测试 | 历史测试固件 |
 | [08_player_avsync.bit](08_player_avsync.bit) | 音画同步播放器基线 | 已由用户实板验收 |
-| [09_player_sw0_sw4.bit](09_player_sw0_sw4.bit) | 当前 SW0～SW4 扩展播放器 | RTL 与 TD 时序通过，实板待验收 |
+| [09_player_sw0_sw4.bit](09_player_sw0_sw4.bit) | SW0～SW4 扩展播放器 | RTL 与 TD 时序通过，实板待验收 |
+| [10_player_picture_blend.bit](10_player_picture_blend.bit) | 当前图片交叉渐变、暂停标志及 SW0～SW4 | RTL 专项与 TD 时序通过，实板待验收 |
 
 09 版沿用 08 的媒体格式和引脚基础，增加音量、亮度、对比度设置，以及顶部彩色滚动文字和左侧音频波形。开关及操作见 [拨码说明](../docs/拨码开关与音量.md)。设置在当前通电期间保持，复位或断电后恢复默认。
 
-所有受管理固件及 09 报告的 SHA256 见 [manifest.json](manifest.json)，`test.cmd` 的工程检查会验证清单。每次发布新增文件名，保留 08 实板基线。报告保留 TD 原始字节，避免换行转换影响校验。
+所有受管理固件及报告的 SHA256 见 [manifest.json](manifest.json)，`test.cmd` 的工程检查会验证清单。每次发布新增文件名，保留 08 实板基线。报告保留 TD 原始字节，避免换行转换影响校验。
+
+## 10 当前构建结果
+
+只有图片切到图片时才进行约 0.27 秒交叉融合，视频帧和跨类型切换直接呈现。左下角自动区分视频暂停与图片停止轮播；详见 [功能说明](../docs/图片交叉渐变与暂停标志.md)。不增加拨码占用。
+
+构建编号 `20261018-234804-566`，器件 EG4S20BG256，工具 TD 6.2.168116。
+
+| 资源 | 已用 / 总量 | 剩余 |
+|---|---:|---:|
+| LUT | 15133 / 19600 | 4467 |
+| 寄存器 | 9856 / 19600 | 9744 |
+| BRAM9K | 40 / 64 | 24 |
+| BRAM32K | 16 / 16 | 0 |
+| DSP | 29 / 29 | 0 |
+| PLL | 3 / 4 | 1 |
+
+相比 09 版增加 452 LUT、402 寄存器和 3 个 BRAM9K，DSP、BRAM32K、PLL 用量不变。最终 SWNS=1.729 ns、HWNS=0.003 ns、STNS/HTNS=0。
+
+报告：[最终时序](reports/10_player_picture_blend/TFMEDIA3_Player_pr.timing)、[最终资源](reports/10_player_picture_blend/TFMEDIA3_Player_phy.area)。SHA256：`52331418584EF189AAA4286D787ADE5F35986CBAC59C486EF884C5B75788A70A`。RTL 专项回归和最终时序均通过，实际 SDRAM 带宽与视觉效果待实板验收。
 
 ## 09 构建结果
 

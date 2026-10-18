@@ -7,7 +7,7 @@ reg rst=1,submit=0,slot=0,valid=0,boundary=0,read_ack=0;
 wire busy,presented,video_slot,video_valid;
 integer acknowledgements=0;
 frame_present_cdc dut(.reader_clk(reader_clk),.reader_rst(rst),
-    .submit(submit),.submit_slot(slot),.submit_valid(valid),.busy(busy),.presented(presented),
+    .submit(submit),.submit_slot(slot),.submit_valid(valid),.submit_picture(1'b0),.busy(busy),.presented(presented),
     .video_clk(video_clk),.video_rst(rst),.frame_boundary(boundary),.read_ack(read_ack),
     .video_slot(video_slot),.video_valid(video_valid));
 always @(posedge reader_clk) if(presented) acknowledgements=acknowledgements+1;

@@ -34,6 +34,7 @@ module tfmedia3_hdmi_shell #(
     input  wire scroll_setting,
     input  wire picture_playing,
     input  wire wave_setting,
+    input wire display_picture, input wire [1:0] pause_status,
     output wire HDMI_CLK_P,
     output wire HDMI_D2_P,
     output wire HDMI_D1_P,
@@ -59,13 +60,17 @@ always @(posedge video_clk or posedge rst_all)
     if(rst_all) begin video_read_req_d<=0; video_read_req_d2<=0; end
     else begin video_read_req_d<=video_read_req; video_read_req_d2<=video_read_req_d; end
 // read_req first rises here, before the 3-stage mem-domain request capture.
-frame_present_cdc u_present(
+wire blend_active;
+wire [4:0] blend_level;
+frame_present_cdc #(.ENABLE_BLEND(1)) u_present(
     .reader_clk(reader_clk), .reader_rst(rst_reader),
     .submit(display_submit), .submit_slot(display_slot), .submit_valid(display_valid),
+    .submit_picture(display_picture),
     .busy(presentation_busy), .presented(frame_presented),
     .video_clk(video_clk), .video_rst(rst_all),
     .frame_boundary(video_read_req && !video_read_req_d),
-    .read_ack(video_read_req_ack), .video_slot(visible_slot), .video_valid(visible_valid));
+    .read_ack(video_read_req_ack), .video_slot(visible_slot), .video_valid(visible_valid),
+    .blend_active(blend_active),.blend_level(blend_level));
 
 wire        axis_s_user;
 wire        axis_s_valid;
@@ -216,22 +221,29 @@ audio_wave_overlay u_audio_wave (
     .vs_in(text_vs), .de_in(text_de), .rgb_in(text_rgb),
     .vs_out(wave_vs), .de_out(wave_de), .rgb_out(wave_rgb)
 );
+wire status_vs,status_de;wire [23:0] status_rgb;
+pause_status_overlay u_pause_status (
+    .clk(video_clk),.rst(rst_all),.status_async(pause_status),
+    .vs_in(wave_vs),.de_in(wave_de),.rgb_in(wave_rgb),
+    .vs_out(status_vs),.de_out(status_de),.rgb_out(status_rgb)
+);
 video_rgb_to_axis_640x480 u_video_axis (
-    .I_clk(video_clk), .I_rst(rst_all), .I_vs(wave_vs),
-    .I_de(wave_de),
-    .I_rgb(wave_rgb),
+    .I_clk(video_clk), .I_rst(rst_all), .I_vs(status_vs),
+    .I_de(status_de),
+    .I_rgb(status_rgb),
     .O_video_user(axis_s_user), .O_video_valid(axis_s_valid),
     .O_video_last(axis_s_last), .O_video_data(axis_s_data)
 );
 
 frame_read_write #(
-    .WRITE_V_FLIP(0), .FRAME_WIDTH(640), .FRAME_HEIGHT(480)
+    .WRITE_V_FLIP(0), .FRAME_WIDTH(640), .FRAME_HEIGHT(480),.ENABLE_BLEND(1)
 ) u_framebuffer (
     .rst(rst_mem), .mem_clk(mem_clk), .Sdr_init_done(sdr_init_done),
     .Sdr_init_ref_vld(sdr_init_ref_vld), .Sdr_busy(sdr_busy),
     .App_rd_en(app_rd_en), .App_rd_addr(app_rd_addr),
     .Sdr_rd_en(sdr_rd_en), .Sdr_rd_dout(sdr_rd_dout),
     .read_clk(video_clk), .read_req(video_read_req_d2),
+    .blend_active(blend_active),.blend_level(blend_level),
     .read_req_ack(video_read_req_ack), .read_finish(),
     .read_addr_0(21'd0), .read_addr_1(21'd307200),
     .read_addr_2(21'd0), .read_addr_3(21'd0),

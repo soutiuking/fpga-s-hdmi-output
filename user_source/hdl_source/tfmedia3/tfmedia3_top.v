@@ -102,14 +102,19 @@ button_debounce_pulse #(.STABLE_CLKS(200_000)) u_wave_switch (
     .pressed(wave_setting), .pressed_pulse()
 );
 reg picture_playing;
+reg [1:0] pause_status;
 button_debounce_pulse #(.STABLE_CLKS(200_000)) u_scroll_switch (
     .clk(reader_clk), .rst(reader_rst), .button_n(sw_n[3]),
     .pressed(scroll_setting), .pressed_pulse()
 );
 always @(posedge reader_clk or posedge reader_rst) begin
-    if(reader_rst) picture_playing <= 0;
-    else picture_playing <= display_valid &&
-        (media_type == 8'd1 || media_type == 8'd2) && !media_changing;
+    if(reader_rst) begin picture_playing <= 0;pause_status<=0;end
+    else begin
+        picture_playing <= display_valid &&
+            (media_type == 8'd1 || media_type == 8'd2) && !media_changing;
+        pause_status<=display_valid && player_paused && !media_changing ?
+            (media_type==8'd1 ? 2'd2 : media_type==8'd2 ? 2'd1 : 2'd0) : 2'd0;
+    end
 end
 player_volume_control u_volume (
     .clk(reader_clk), .rst(reader_rst), .sw0_n(sw_n[0]), .sw1_n(sw_n[1]), .sw2_n(sw_n[2]),
@@ -221,6 +226,7 @@ tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
     .contrast_setting(contrast_mode), .contrast_level(contrast),
     .scroll_setting(scroll_setting), .picture_playing(picture_playing),
     .wave_setting(wave_setting),
+    .display_picture(media_type==8'd1),.pause_status(pause_status),
     .HDMI_CLK_P   (HDMI_CLK_P),
     .HDMI_D2_P    (HDMI_D2_P),
     .HDMI_D1_P    (HDMI_D1_P),

@@ -10,6 +10,22 @@
     </HardWare>
     <Source_Files>
         <Verilog>
+            <File Path="../user_source/hdl_source/tfmedia3/picture_blend_read.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="90"/>
+                </FileInfo>
+            </File>
+            <File Path="../user_source/hdl_source/tfmedia3/pause_status_overlay.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="91"/>
+                </FileInfo>
+            </File>
             <File Path="../user_source/hdl_source/tfmedia3/audio_wave_overlay.v">
                 <FileInfo>
                     <Attr Name="UsedInSyn" Val="true"/>

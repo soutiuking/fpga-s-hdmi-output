@@ -109,6 +109,9 @@ def main():
         rtl('tb_contrast_video_pipeline',[tf/'volume_bar_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
         rtl('tb_scroll_text_overlay',[tf/'scroll_text_overlay.v',tf/'scroll_text_font.v',HDL/'video_rgb_to_axis_640x480.v'])
         rtl('tb_audio_wave_overlay',[tf/'audio_wave_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
+        rtl('tb_picture_blend_read',[tf/'picture_blend_read.v'])
+        rtl('tb_picture_present_blend',[tf/'frame_present_cdc.v'])
+        rtl('tb_pause_status_overlay',[tf/'pause_status_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
         golden=SIM/'fixtures/legacy_frames.img'
         # Older Windows Icarus cannot open Unicode file names.
         ascii_golden=work/'golden_catalog.bin';shutil.copyfile(SIM/'fixtures/legacy_catalog.bin',ascii_golden)

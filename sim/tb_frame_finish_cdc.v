@@ -13,7 +13,8 @@ tfmedia3_hdmi_shell dut(.clk(reader_clk), .reader_clk(reader_clk),
     .volume_setting(1'b0), .volume_level(5'd16),
     .brightness_setting(1'b0), .brightness_level(5'd16),
     .contrast_setting(1'b0), .contrast_level(5'd8),
-    .scroll_setting(1'b0), .picture_playing(1'b0), .wave_setting(1'b0));
+    .scroll_setting(1'b0), .picture_playing(1'b0), .wave_setting(1'b0),
+    .display_picture(1'b0),.pause_status(2'd0));
 always @(posedge reader_clk) begin
     if (!rst) begin
         if (finish && previous) $fatal(1, "Completion wider than one cycle");

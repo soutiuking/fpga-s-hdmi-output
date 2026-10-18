@@ -28,7 +28,7 @@ SW3（M13，用户提供引脚序号 31）为独立的滚动文字开关，ON/�
 
 ## 当前固件与验证
 
-使用 [09 扩展固件](../firmware/09_player_sw0_sw4.bit)，包含 SW0～SW4。当前资源与时序见 [固件说明](../firmware/README.md)，开发构建记录见 [历史记录](history/SW0-SW3开发构建记录.md)。彩色文字专项仿真、图片/视频门控、媒体切换与 HDMI CDC 已通过，实板效果待验证。
+使用 [10 扩展固件](../firmware/10_player_picture_blend.bit)，包含 SW0～SW4。当前资源与时序见 [固件说明](../firmware/README.md)，开发构建记录见 [历史记录](history/SW0-SW3开发构建记录.md)。彩色文字专项仿真、图片/视频门控、媒体切换与 HDMI CDC 已通过，实板效果待验证。
 
 ## 上板检查
 

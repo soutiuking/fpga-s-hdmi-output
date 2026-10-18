@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current": "firmware/09_player_sw0_sw4.bit",
+  "current": "firmware/10_player_picture_blend.bit",
   "hardware_baseline": "firmware/08_player_avsync.bit",
   "device": "EG4S20BG256",
   "tool": "Tang Dynasty 6.2.168116",
@@ -8,23 +8,22 @@
     "date": "2026-10-18",
     "routed_timing": "passed",
     "hardware": "pending",
-    "setup_wns_ns": 0.923,
-    "hold_wns_ns": 0.004,
-    "full_rtl_regression": "passed",
-    "jpeg_pixels": 307200,
-    "jpeg_mae_per_channel": 0.216349
+    "setup_wns_ns": 1.729,
+    "hold_wns_ns": 0.003,
+    "specialized_rtl_regression": "passed",
+    "quick_rtl_regression": "passed"
   },
   "resources": {
     "lut": {
-      "used": 14681,
+      "used": 15133,
       "total": 19600
     },
     "register": {
-      "used": 9454,
+      "used": 9856,
       "total": 19600
     },
     "bram9k": {
-      "used": 37,
+      "used": 40,
       "total": 64
     },
     "bram32k": {
@@ -58,12 +57,24 @@
       "sha256": "3482fff055e236c910194cb0b0137d0c8aced43e6c7765b2fffac81296fe3aa4"
     },
     {
+      "path": "firmware/10_player_picture_blend.bit",
+      "sha256": "52331418584ef189aaa4286d787ade5f35986cbac59c486ef884c5b75788a70a"
+    },
+    {
       "path": "firmware/reports/09_player_sw0_sw4/TFMEDIA3_Player_phy.area",
       "sha256": "67434dc411c7754989bba5c4b7801ce7be0355246ab693a377fbd99744358709"
     },
     {
       "path": "firmware/reports/09_player_sw0_sw4/TFMEDIA3_Player_pr.timing",
       "sha256": "17782be726f9898e3ba45748ba540ac395cbe502c83b8038547a64440cdc52b1"
+    },
+    {
+      "path": "firmware/reports/10_player_picture_blend/TFMEDIA3_Player_phy.area",
+      "sha256": "0e6d72d1de006beb859c7a131dd5cc71303d2593f37d49305b26d97686fc1cca"
+    },
+    {
+      "path": "firmware/reports/10_player_picture_blend/TFMEDIA3_Player_pr.timing",
+      "sha256": "35ba484f525d0c290e4a0742a2d245674968b37e56cda13dadf3fcfb30896fc2"
     }
   ]
 }

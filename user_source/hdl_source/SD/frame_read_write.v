@@ -10,7 +10,8 @@ module frame_read_write
 	parameter BURST_SIZE             = 256,
 	parameter WRITE_V_FLIP           = 1,      // 1: vertical flip when writing TF/BMP frame into SDRAM
 	parameter FRAME_WIDTH            = 640,
-	parameter FRAME_HEIGHT           = 480
+	parameter FRAME_HEIGHT           = 480,
+    parameter ENABLE_BLEND           = 0
 ) 
 (
 	input                            rst,                  
@@ -34,6 +35,7 @@ module frame_read_write
 	
 	input                            read_clk,                   // data read module clock
 	input                            read_req,                   // data read module read request,keep '1' until read_req_ack = '1'
+    input blend_active, input [4:0] blend_level,
 	output                           read_req_ack,               // data read module read request response
 	output                           read_finish,                // data read module read request finish
 	input[ADDR_BITS - 1:0]           read_addr_0,                // data read module read request base address 0, used when read_addr_index = 0
@@ -83,6 +85,8 @@ wire                                 write_fifo_aclr;            // fifo Asynchr
 
 wire O_wr_busy;
 wire O_rd_busy;
+wire display_fifo_we;
+wire [31:0] display_fifo_data;
 
 assign App_wr_busy = O_wr_busy;//下个时钟写指令拉高
 assign App_rd_busy = O_rd_busy;//读指令还没有过去十个时钟;因为写指令优先，不需要在意下个时钟是否是读指令
@@ -146,9 +150,9 @@ rfifo_32_32_512 read_buf
 	.clkr                     	(read_clk                   ),          // Read side clock
 	.clkw                     	(mem_clk                    ),          // Write side clock
 	.rst                      	(read_fifo_aclr             ),          // Asynchronous clear
-	.we                     	(Sdr_rd_en       			),          // Write Request
+	.we                     	(display_fifo_we),          // Write Request
 	.re                     	(read_en                    ),          // Read Request
-	.di                      	(Sdr_rd_dout                ),          // Input Data
+	.di                      	(display_fifo_data),          // Input Data
 	.empty_flag					(                           ),          // Read side Empty flag
 	.full_flag					(                           ),          // Write side Full flag
 	.wrusedw                	(wrusedw         	  	  		 ),          // Read Used Words
@@ -156,6 +160,22 @@ rfifo_32_32_512 read_buf
 	.dout						(read_data                  )
 );
 
+generate if(ENABLE_BLEND) begin: g_blend
+picture_blend_read #(.ADDR_BITS(ADDR_BITS)) blend_reader (
+    .rst(rst),.mem_clk(mem_clk),.Sdr_init_done(Sdr_init_done),
+    .Sdr_init_ref_vld(Sdr_init_ref_vld),.Sdr_busy(Sdr_busy),
+    .Sdr_rd_en(Sdr_rd_en),.Sdr_rd_dout(Sdr_rd_dout),.App_wr_busy(App_wr_busy),
+    .O_rd_busy(O_rd_busy),.App_rd_en(App_rd_en),.App_rd_addr(App_rd_addr),
+    .read_req(read_req),.read_req_ack(read_req_ack),.read_finish(read_finish),
+    .read_addr_0(read_addr_0),.read_addr_1(read_addr_1),
+    .read_addr_2(read_addr_2),.read_addr_3(read_addr_3),.read_addr_index(read_addr_index),
+    .read_len(read_len),.blend_active(blend_active),.blend_level(blend_level),
+    .fifo_aclr(read_fifo_aclr),.wrusedw(wrusedw),
+    .mixed_valid(display_fifo_we),.mixed_data(display_fifo_data)
+);
+end else begin: g_direct
+assign display_fifo_we=Sdr_rd_en;
+assign display_fifo_data=Sdr_rd_dout;
 frame_fifo_read
 #
 (
@@ -189,5 +209,5 @@ frame_fifo_read_m0
 	.fifo_aclr                  (read_fifo_aclr           ),
 	.wrusedw                	(wrusedw                  )
 );
-
+end endgenerate
 endmodule

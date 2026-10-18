@@ -175,6 +175,19 @@ initial begin
  inject_change=0; switches=8'hff;
  repeat(12) @(negedge clk);
  if(dut.scroll_setting) $fatal(1,"SW3 OFF did not disable marquee");
+ inject_pause=1;
+ force dut.player_paused=inject_pause;
+ repeat(8) @(negedge clk);
+ if(dut.u_hdmi_shell.pause_status!==2'd2 || dut.u_hdmi_shell.display_picture!==1'b1)
+     $fatal(1,"picture stopped status missing");
+ force dut.media_type=8'd2;repeat(8) @(negedge clk);
+ if(dut.u_hdmi_shell.pause_status!==2'd1 || dut.u_hdmi_shell.display_picture!==1'b0)
+     $fatal(1,"video pause status/type wiring failed");
+ inject_pause=0;repeat(8) @(negedge clk);
+ if(dut.u_hdmi_shell.pause_status!==0) $fatal(1,"pause status remained after resume");
+ inject_pause=1;inject_change=1;repeat(8) @(negedge clk);
+ if(dut.u_hdmi_shell.pause_status!==0) $fatal(1,"pause status shown during media change");
+ $display("PASS: picture/video pause status classification, resume and media-change gating");
  $display("PASS: SW3 independent marquee on pictures AND videos, transition/invalid-media gating and normal key passthrough");
  $display("PASS: SW4 independently enables/disables waveform through the actual top and HDMI shell");
  $display("PASS: actual top isolates volume keys, retains gain across media changes and forwards scaled PCM/ACK");
