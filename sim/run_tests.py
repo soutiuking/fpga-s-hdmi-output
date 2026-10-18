@@ -102,6 +102,13 @@ def main():
             if 'PASS' not in result.stdout or any(t in result.stdout for t in ['FATAL:','FAIL','ERROR:']):
                 raise AssertionError(f'{top}: simulation did not pass\n{result.stderr}')
         tf=HDL/'tfmedia3'
+        rtl('tb_player_volume_control',[tf/'player_volume_control.v',tf/'button_debounce_pulse.v'])
+        rtl('tb_volume_bar_overlay',[tf/'volume_bar_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
+        rtl('tb_brightness_gain',[tf/'volume_bar_overlay.v'])
+        rtl('tb_contrast_gain',[tf/'volume_bar_overlay.v'])
+        rtl('tb_contrast_video_pipeline',[tf/'volume_bar_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
+        rtl('tb_scroll_text_overlay',[tf/'scroll_text_overlay.v',tf/'scroll_text_font.v',HDL/'video_rgb_to_axis_640x480.v'])
+        rtl('tb_audio_wave_overlay',[tf/'audio_wave_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
         golden=SIM/'fixtures/legacy_frames.img'
         # Older Windows Icarus cannot open Unicode file names.
         ascii_golden=work/'golden_catalog.bin';shutil.copyfile(SIM/'fixtures/legacy_catalog.bin',ascii_golden)
@@ -123,6 +130,7 @@ def main():
         rtl('tb_jpeg_input_gaps',[ROOT/'third_party/core_jpeg/src_v/jpeg_input.v'],
             [f'+jpeg_bytes={len(late_frame)}','+jpeg_hex='+str(gap_vector)])
         subprocess.run([sys.executable,str(SIM/'check_top_recovery.py'),str(exe)],check=True)
+        subprocess.run([sys.executable,str(SIM/'check_hdmi_cdc.py'),str(exe)],check=True)
         reader_sources=([tf/n for n in ['tfmedia3_reader_frontend.v','button_debounce_pulse.v',
              'tfmedia3_catalog.v','tfmedia3_metadata.v','sd_sector_arbiter4.v','jpeg_sram_dma.v','pcm_audio_buffer.v']]+
              [HDL/'memory'/n for n in ['sram_arbiter2.v','async_sram16_controller.v']])

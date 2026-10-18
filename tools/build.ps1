@@ -76,5 +76,6 @@ $taskOutput=Join-Path $taskRoot "output/$Target-$taskStamp"
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
 Copy-Item -LiteralPath $taskBit -Destination (Join-Path $taskOutput "$Target.bit")
 Copy-Item -LiteralPath (Join-Path $taskWork "phy_1/$Target`_pr.timing") -Destination $taskOutput
+Copy-Item -LiteralPath (Join-Path $taskWork "phy_1/$Target`_phy.area") -Destination $taskOutput
 Write-Host ('SHA256: ' + (Get-TaskSHA256 $taskBit))
 Write-Host "Build passed: $taskOutput"

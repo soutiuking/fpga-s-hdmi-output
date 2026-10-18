@@ -1,6 +1,6 @@
 # Git 管理与发布
 
-`useing` 是独立 Git 仓库。源码、约束、TD 工程、文档、离线依赖、精简回归样本和三个有用途的固件纳入管理。构建数据库、Runs、运行时、波形、临时日志、用户媒体、生成镜像和发布压缩包被 `.gitignore` 排除；少量验收证据日志为明确保留项。
+`useing` 是独立 Git 仓库。源码、约束、TD 工程、文档、离线依赖、精简回归样本和测试固件、实板基线及当前扩展固件纳入管理。构建数据库、Runs、运行时、波形、临时日志、用户媒体、生成镜像和发布压缩包被 `.gitignore` 排除；少量验收证据日志为明确保留项。
 
 仓库不需要 Git LFS 和子模块。离线依赖压缩后作为必要分发文件管理，避免克隆后依赖原机器安装。调整依赖时同步更新 `vendor/manifest.json` 的来源、版本和 SHA256，不提交解压出的 `.runtime`。
 
@@ -18,18 +18,18 @@ git commit -m 'Describe the change'
 
 ## 配置远程仓库
 
-尚未提供远程地址，因此交付时只初始化本地 Git，不创建外部仓库或推送文件。用户准备好空远程仓库后执行：
+当前远程仓库为 https://github.com/soutiuking/fpga-s-hdmi-output ，默认分支为 `main`。首次配置其他克隆时执行以下命令；已有 origin 时无需重复添加：
 
 ```powershell
-git remote add origin <你的仓库地址>
+git remote add origin https://github.com/soutiuking/fpga-s-hdmi-output.git
 git push -u origin main
-git push origin --tags
+
 ```
 
 另一台 Windows x64 机器：
 
 ```powershell
-git clone <你的仓库地址> useing
+git clone https://github.com/soutiuking/fpga-s-hdmi-output.git useing
 cd useing
 .\setup.cmd
 .\test.cmd
@@ -52,3 +52,5 @@ cd useing
 ## 版本原则
 
 `firmware/08_player_avsync.bit` 为实板验收基线，变更前保留旧文件，并使用新的文件名保存新固件。仅软件回归通过不等于新固件已实板验收；提交信息与测试记录应明确验证范围。
+
+扩展固件使用独立版本号保存，SHA256 写入 `firmware/manifest.json`，资源与时序报告放在 `firmware/reports/`。预览与验收证据放在 `docs/evidence/`，用户文档不要依赖被忽略的 `output/` 目录。发布前执行 `test.cmd -Full`，确认当前功能的硬件验收状态，提交后再运行 `package.cmd`。

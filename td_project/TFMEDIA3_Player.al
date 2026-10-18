@@ -10,6 +10,46 @@
     </HardWare>
     <Source_Files>
         <Verilog>
+            <File Path="../user_source/hdl_source/tfmedia3/audio_wave_overlay.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="89"/>
+                </FileInfo>
+            </File>
+            <File Path="../user_source/hdl_source/tfmedia3/scroll_text_font.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="87"/>
+                </FileInfo>
+            </File>
+            <File Path="../user_source/hdl_source/tfmedia3/scroll_text_overlay.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="88"/>
+                </FileInfo>
+            </File>
+            <File Path="../user_source/hdl_source/tfmedia3/volume_bar_overlay.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="86"/>
+                </FileInfo>
+            </File>
+            <File Path="../user_source/hdl_source/tfmedia3/player_volume_control.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="85"/>
+                </FileInfo>
+            </File>
             <File Path="../user_source/hdl_source/I2S_receiver.v">
                 <FileInfo>
                     <Attr Name="UsedInSyn" Val="true"/>

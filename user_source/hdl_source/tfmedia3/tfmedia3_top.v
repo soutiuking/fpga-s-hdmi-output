@@ -11,6 +11,7 @@ module tfmedia3_top #(
     input  wire key_s1_n,
     input  wire key_s2_n,
     input  wire key_reset_n,
+    input  wire [7:0] sw_n,
 
     output wire HDMI_CLK_P,
     output wire HDMI_D2_P,
@@ -86,6 +87,40 @@ wire       media_changing;
 wire       audio_sample_request_toggle;
 wire       audio_sample_ack_toggle;
 wire [15:0] audio_sample_data;
+wire audio_raw_ack;
+wire [15:0] audio_raw_data;
+wire next_key_n, pause_key_n, volume_mode;
+wire [4:0] volume;
+wire brightness_mode;
+wire [4:0] brightness;
+wire contrast_mode;
+wire [4:0] contrast;
+wire scroll_setting;
+wire wave_setting;
+button_debounce_pulse #(.STABLE_CLKS(200_000)) u_wave_switch (
+    .clk(reader_clk), .rst(reader_rst), .button_n(sw_n[4]),
+    .pressed(wave_setting), .pressed_pulse()
+);
+reg picture_playing;
+button_debounce_pulse #(.STABLE_CLKS(200_000)) u_scroll_switch (
+    .clk(reader_clk), .rst(reader_rst), .button_n(sw_n[3]),
+    .pressed(scroll_setting), .pressed_pulse()
+);
+always @(posedge reader_clk or posedge reader_rst) begin
+    if(reader_rst) picture_playing <= 0;
+    else picture_playing <= display_valid &&
+        (media_type == 8'd1 || media_type == 8'd2) && !media_changing;
+end
+player_volume_control u_volume (
+    .clk(reader_clk), .rst(reader_rst), .sw0_n(sw_n[0]), .sw1_n(sw_n[1]), .sw2_n(sw_n[2]),
+    .key_up_n(key_s1_n), .key_down_n(key_s2_n),
+    .next_key_n(next_key_n), .pause_key_n(pause_key_n),
+    .volume_mode(volume_mode), .volume(volume),
+    .brightness_mode(brightness_mode), .brightness(brightness),
+    .contrast_mode(contrast_mode), .contrast(contrast),
+    .sample_ack_in(audio_raw_ack), .sample_in(audio_raw_data),
+    .sample_ack_out(audio_sample_ack_toggle), .sample_out(audio_sample_data)
+);
 wire       audio_underflow;
 wire       audio_playback_enable;
 reg        display_valid;
@@ -127,6 +162,9 @@ assign debug_segments = (debug_error == 8'h34) ? {
     hex_segment(decode_debug[19:16]), hex_segment(decode_debug[15:12]),
     hex_segment(decode_debug[11:8]), hex_segment(decode_debug[7:4]),
     hex_segment(decode_debug[3:0])
+} : volume_mode ? {
+    8'hff, 8'hff, 8'hff, 8'hff, 8'hc1, 8'hc7,
+    hex_segment({3'd0, volume[4]}), hex_segment(volume[3:0])
 } : {
     hex_segment(debug_error[7:4]),
     hex_segment(debug_error[3:0]),
@@ -178,6 +216,11 @@ tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
     .audio_sample_request_toggle(audio_sample_request_toggle),
     .audio_sample_ack_toggle(audio_sample_ack_toggle),
     .audio_sample_data(audio_sample_data),
+    .volume_setting(volume_mode), .volume_level(volume),
+    .brightness_setting(brightness_mode), .brightness_level(brightness),
+    .contrast_setting(contrast_mode), .contrast_level(contrast),
+    .scroll_setting(scroll_setting), .picture_playing(picture_playing),
+    .wave_setting(wave_setting),
     .HDMI_CLK_P   (HDMI_CLK_P),
     .HDMI_D2_P    (HDMI_D2_P),
     .HDMI_D1_P    (HDMI_D1_P),
@@ -190,8 +233,8 @@ tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
 tfmedia3_reader_frontend #(.CLK_HZ(40_000_000)) u_reader (
     .clk           (reader_clk),
     .rst           (reader_rst),
-    .key_s1_n      (key_s1_n),
-    .key_s2_n      (key_s2_n),
+    .key_s1_n      (next_key_n),
+    .key_s2_n      (pause_key_n),
     .sd_ncs        (sd_ncs),
     .sd_dclk       (sd_dclk),
     .sd_mosi       (sd_mosi),
@@ -210,8 +253,8 @@ tfmedia3_reader_frontend #(.CLK_HZ(40_000_000)) u_reader (
     .decode_ready  (reader_decode_ready), .frame_presented(frame_presented),
     .audio_playback_enable(audio_playback_enable),
     .audio_sample_request_toggle(audio_sample_request_toggle),
-    .audio_sample_ack_toggle(audio_sample_ack_toggle),
-    .audio_sample_data(audio_sample_data),
+    .audio_sample_ack_toggle(audio_raw_ack),
+    .audio_sample_data(audio_raw_data),
     .audio_underflow(audio_underflow),
     .paused        (player_paused),
     .frame_cached  (frame_cached),

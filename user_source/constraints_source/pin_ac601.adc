@@ -4,6 +4,16 @@ set_pin_assignment { key_s1_n }    { LOCATION = F7;  IOSTANDARD = LVCMOS33; PULL
 set_pin_assignment { key_s2_n }    { LOCATION = E7;  IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
 set_pin_assignment { key_reset_n } { LOCATION = H14; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
 
+# Eight expansion DIP switches: ON/down = low (closed to ground).
+set_pin_assignment { sw_n[0] } { LOCATION = N14; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[1] } { LOCATION = K12; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[2] } { LOCATION = J12; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[3] } { LOCATION = M13; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[4] } { LOCATION = L13; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[5] } { LOCATION = P14; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[6] } { LOCATION = P16; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+set_pin_assignment { sw_n[7] } { LOCATION = P15; IOSTANDARD = LVCMOS33; PULLTYPE = PULLUP; }
+
 set_pin_assignment { HDMI_CLK_P }  { LOCATION = B10; IOSTANDARD = LVDS33_E; PULLTYPE = NONE; }
 set_pin_assignment { HDMI_D0_P }   { LOCATION = D11; IOSTANDARD = LVDS33_E; PULLTYPE = NONE; }
 set_pin_assignment { HDMI_D1_P }   { LOCATION = C11; IOSTANDARD = LVDS33_E; PULLTYPE = NONE; }

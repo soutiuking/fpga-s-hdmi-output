@@ -1,4 +1,7 @@
 * text=auto
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.json text eol=lf
 *.v text eol=lf
 *.vhd text eol=lf
 *.tcl text eol=lf
@@ -19,4 +22,6 @@
 *.pdf binary
 *.xlsx binary
 *.png binary
+*.area -text -whitespace
+*.timing -text -whitespace
 *.mkv binary

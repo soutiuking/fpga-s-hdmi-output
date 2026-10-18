@@ -19,7 +19,7 @@ def main():
         raise SystemExit('Embedded Git repository detected. Vendor actual source files before packaging.')
     paths=[p.decode('utf-8') for p in git('ls-tree','-r','--name-only','-z','HEAD').split(b'\0') if p]
     output=ROOT/'dist';output.mkdir(exist_ok=True)
-    name=f'useing-08-{datetime.now():%Y%m%d-%H%M%S-%f}-{commit[:8]}.zip'
+    name=f'useing-{datetime.now():%Y%m%d-%H%M%S-%f}-{commit[:8]}.zip'
     target=output/name
     records=[]
     with zipfile.ZipFile(target,'x',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:

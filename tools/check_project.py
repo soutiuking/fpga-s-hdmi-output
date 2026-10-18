@@ -16,6 +16,14 @@ def main():
             count+=1
     expected='d720296b1bc6d058de31c581583c3561c512d416f46b9e987cda86b5777e14d6'
     assert hashlib.sha256((ROOT/'firmware/08_player_avsync.bit').read_bytes()).hexdigest()==expected
+    firmware=json.loads((ROOT/'firmware/manifest.json').read_text(encoding='utf-8'))
+    assert firmware['schema_version']==1
+    artifact_paths={artifact['path'] for artifact in firmware['artifacts']}
+    assert firmware['current'] in artifact_paths and firmware['hardware_baseline'] in artifact_paths
+    for artifact in firmware['artifacts']:
+        path=(ROOT/artifact['path']).resolve()
+        assert path.is_relative_to((ROOT/'firmware').resolve()) and path.is_file(), path
+        assert hashlib.sha256(path.read_bytes()).hexdigest()==artifact['sha256'], path
     for dependency in json.loads((ROOT/'vendor/manifest.json').read_text(encoding='utf-8')):
         path=ROOT/'vendor'/dependency['file']
         assert hashlib.sha256(path.read_bytes()).hexdigest()==dependency['sha256'], path
@@ -25,6 +33,6 @@ def main():
             path=ROOT/item['path']
             assert hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256'], path
         print('PASS: ZIP release manifest matches every delivered file')
-    print(f'PASS: {count} relative TD references, accepted bitstream and offline dependency hashes')
+    print(f'PASS: {count} relative TD references, firmware manifest, accepted bitstream and offline dependency hashes')
 
 if __name__=='__main__':main()

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "current": "firmware/09_player_sw0_sw4.bit",
+  "hardware_baseline": "firmware/08_player_avsync.bit",
+  "device": "EG4S20BG256",
+  "tool": "Tang Dynasty 6.2.168116",
+  "validation": {
+    "date": "2026-10-18",
+    "routed_timing": "passed",
+    "hardware": "pending",
+    "setup_wns_ns": 0.923,
+    "hold_wns_ns": 0.004,
+    "full_rtl_regression": "passed",
+    "jpeg_pixels": 307200,
+    "jpeg_mae_per_channel": 0.216349
+  },
+  "resources": {
+    "lut": {
+      "used": 14681,
+      "total": 19600
+    },
+    "register": {
+      "used": 9454,
+      "total": 19600
+    },
+    "bram9k": {
+      "used": 37,
+      "total": 64
+    },
+    "bram32k": {
+      "used": 16,
+      "total": 16
+    },
+    "dsp": {
+      "used": 29,
+      "total": 29
+    },
+    "pll": {
+      "used": 3,
+      "total": 4
+    }
+  },
+  "artifacts": [
+    {
+      "path": "firmware/01_segtest.bit",
+      "sha256": "6a05deb929eb0a4160ddb4ed900341b7024970e04a04b0c2a9591bc5059be80a"
+    },
+    {
+      "path": "firmware/02_hdmitest.bit",
+      "sha256": "960515e5f62571f5fb5d777989af17d94b7b2425481e98dab6b90d604feaf855"
+    },
+    {
+      "path": "firmware/08_player_avsync.bit",
+      "sha256": "d720296b1bc6d058de31c581583c3561c512d416f46b9e987cda86b5777e14d6"
+    },
+    {
+      "path": "firmware/09_player_sw0_sw4.bit",
+      "sha256": "3482fff055e236c910194cb0b0137d0c8aced43e6c7765b2fffac81296fe3aa4"
+    },
+    {
+      "path": "firmware/reports/09_player_sw0_sw4/TFMEDIA3_Player_phy.area",
+      "sha256": "67434dc411c7754989bba5c4b7801ce7be0355246ab693a377fbd99744358709"
+    },
+    {
+      "path": "firmware/reports/09_player_sw0_sw4/TFMEDIA3_Player_pr.timing",
+      "sha256": "17782be726f9898e3ba45748ba540ac395cbe502c83b8038547a64440cdc52b1"
+    }
+  ]
+}
