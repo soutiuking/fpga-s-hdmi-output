@@ -1,0 +1,7 @@
+PASS: actual top clears stalled JPEG on media change and accepts subsequent media twice
+PASS: actual top holds future frames until PCM playhead, respects pause and clears pending pages on media switch
+PASS: picture/video pause status classification, resume and media-change gating
+PASS: SW3 independent marquee on pictures AND videos, transition/invalid-media gating and normal key passthrough
+PASS: actual top debounces SW5/SW6/SW7 independently and together without entering key setting modes
+PASS: SW4 independently enables/disables waveform through the actual top and HDMI shell
+PASS: actual top isolates volume keys, retains gain across media changes and forwards scaled PCM/ACK

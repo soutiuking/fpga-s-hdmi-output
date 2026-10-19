@@ -1,0 +1,1 @@
+Tcl/Tk and Python tkinter runtime modules from the user-provided FPGA_TF_Media_Tool_Windows_x64. Python/Tcl/Tk licenses apply. Tcl/Tk license terms are retained in _tcl_data/license.terms and _tk_data/license.terms. No original application executable or media image is included.

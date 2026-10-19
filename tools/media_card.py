@@ -15,9 +15,12 @@ import tempfile
 import zlib
 from jpeg_profile import check_hardware_profile
 
+CREATE_NO_WINDOW = 0x08000000 if os.name == 'nt' else 0
+
 SECTOR = 512
 WIDTH, HEIGHT, FPS = 640, 480, 25
 MAX_JPEG = 65536
+import subtitles
 IMAGE_SUFFIXES = {'.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff', '.webp'}
 
 def sectors(n): return (n + 511) // 512
@@ -95,7 +98,7 @@ def convert_source(path, folder, args):
             if args.max_frames: command += ['-frames:v', str(args.max_frames)]
             command += ['-f', 'rawvideo', 'pipe:1']
             with tempfile.TemporaryFile() as errors:
-                proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=errors)
+                proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=errors, creationflags=CREATE_NO_WINDOW)
                 try:
                     while raw := read_exact(proc.stdout, WIDTH * HEIGHT * 3):
                         append_frame(Image.frombytes('RGB', (WIDTH, HEIGHT), raw), output)
@@ -112,7 +115,7 @@ def convert_source(path, folder, args):
         command = [find_ffmpeg(args.ffmpeg), '-nostdin', '-v', 'error', '-y', '-i', str(path),
                    '-map', '0:a:0?', '-vn', '-ac', '1', '-ar', '48000', '-t', str(len(records)/25),
                    '-f', 's16le', str(audio_path)]
-        result = subprocess.run(command, capture_output=True)
+        result = subprocess.run(command, capture_output=True, creationflags=CREATE_NO_WINDOW)
         if result.returncode:
             message = result.stderr.decode(errors='replace')
             if 'does not contain any stream' not in message and 'matches no streams' not in message:
@@ -133,6 +136,8 @@ def pack(args):
     if not 10 <= args.quality <= 95 or not 1024 <= args.max_frame_bytes <= MAX_JPEG:
         raise ValueError('quality must be 10..95, frame budget 1024..65536')
     if args.max_frames is not None and args.max_frames < 1: raise ValueError('max-frames must be positive')
+    subtitle_entries=subtitles.load(getattr(args,"subtitles",None))
+    subtitle_blob=subtitles.encode(subtitle_entries)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='tfmedia3-', dir=output.parent) as tmp:
         folder = Path(tmp); items = []
@@ -147,6 +152,8 @@ def pack(args):
             item['data_lba'] = cursor; cursor += sectors(item['size'])
             item['audio_lba'] = cursor if item['audio_bytes'] else 0
             cursor += sectors(item['audio_bytes'])
+        subtitle_lba=cursor if subtitle_blob else 0
+        cursor += len(subtitle_blob)//512
         if cursor > 0xffffffff: raise ValueError('Card image exceeds 32-bit sector limit')
         staged = folder / 'card.img'
         with staged.open('wb') as out:
@@ -155,7 +162,10 @@ def pack(args):
             header[:8] = b'TFMEDIA3'
             struct.pack_into('<HHHHIIHHIIHHIII', header, 8,
                              3,512,16,len(items),1,1,WIDTH,HEIGHT,25,1,1,16,48000,0,cursor)
+            struct.pack_into("<I",header,52,subtitle_lba)
             out.seek(0); out.write(crc_sector(header))
+            if subtitle_blob:
+                out.seek(subtitle_lba*512);out.write(subtitle_blob)
             for i, item in enumerate(items):
                 out.seek(SECTOR+i*16)
                 out.write(struct.pack('<BBHIII', item['kind'],0,i,item['meta_lba'],item['data_lba'],item['size']))
@@ -207,6 +217,11 @@ def inspect(path):
         if (version,hsize,esize,ilba,isectors,w,h,fn,fd,ach,abits,rate)!=(3,512,16,1,1,640,480,25,1,1,16,48000):
             raise ValueError('Unsupported TFMEDIA3 profile')
         if not 1<=count<=20 or size!=total*512: raise ValueError('Invalid count or total image size')
+        subtitle_lba=struct.unpack_from("<I",header,52)[0]
+        subtitle_report=[]
+        if subtitle_lba:
+            extent(subtitle_lba*512,22*512,"subtitles")
+            subtitle_report=subtitles.decode(read_at(subtitle_lba*512,22*512))
         items=[]
         for i in range(count):
             kind,eflags,mid,mlba,dlba,dbytes=struct.unpack('<BBHIII',read_at(512+i*16,16))
@@ -235,14 +250,53 @@ def inspect(path):
         ranges.sort()
         for left,right in zip(ranges,ranges[1:]):
             if left[1]>right[0]: raise ValueError(f'Overlapping regions: {left[2]} / {right[2]}')
-    return dict(sectors=total,bytes=size,media=items)
+    return dict(sectors=total,bytes=size,media=items,subtitles=subtitle_report)
 
 def disks():
     if os.name!='nt': raise ValueError('Disk enumeration/writing requires Windows')
-    script='Get-Disk | Select-Object Number,FriendlyName,BusType,Size,IsBoot,IsSystem,IsReadOnly | ConvertTo-Json -Compress'
-    result=subprocess.run(['powershell.exe','-NoProfile','-Command',script],capture_output=True,check=True)
+    script=r'''$ErrorActionPreference='Stop'
+[Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
+$result=@(Get-Disk | ForEach-Object {
+ $d=$_
+ $volumes=@(Get-Partition -DiskNumber $d.Number -ErrorAction SilentlyContinue | ForEach-Object {
+  $p=$_;$v=$p | Get-Volume -ErrorAction SilentlyContinue
+  [pscustomobject]@{DriveLetter=([string]$p.DriveLetter).Trim([char]0);Label=[string]$v.FileSystemLabel;
+   FileSystem=[string]$v.FileSystem;Size=[long]$p.Size;AccessPaths=@($p.AccessPaths)}
+ })
+ [pscustomobject]@{Number=[int]$d.Number;FriendlyName=[string]$d.FriendlyName;
+  BusType=[string]$d.BusType;Size=[long]$d.Size;IsBoot=[bool]$d.IsBoot;
+  IsSystem=[bool]$d.IsSystem;IsReadOnly=[bool]$d.IsReadOnly;IsOffline=[bool]$d.IsOffline;
+  SerialNumber=[string]$d.SerialNumber;UniqueId=[string]$d.UniqueId;
+  Path=[string]$d.Path;PartitionStyle=[string]$d.PartitionStyle;Volumes=$volumes}
+})
+ConvertTo-Json -InputObject $result -Depth 6 -Compress'''
+    result=subprocess.run(['powershell.exe','-NoProfile','-Command',script],capture_output=True,check=True,creationflags=CREATE_NO_WINDOW)
     data=json.loads(result.stdout.decode('utf-8-sig',errors='replace'))
-    return data if isinstance(data,list) else [data]
+    result=data if isinstance(data,list) else [data]
+    for disk in result:
+        disk['Identity']=disk_identity(disk)
+        disk['Eligible']=disk_eligible(disk)
+    return result
+
+
+def disk_eligible(disk):
+    return (not any(disk.get(k,False) for k in ('IsBoot','IsSystem','IsReadOnly','IsOffline'))
+            and int(disk.get('Size',0))>0
+            and str(disk.get('BusType','')).lower() in ('usb','sd','mmc','7','12','13'))
+
+
+def disk_identity(disk):
+    fields={key:disk.get(key) for key in ('Number','FriendlyName','BusType','Size','SerialNumber','UniqueId','Path')}
+    return hashlib.sha256(json.dumps(fields,sort_keys=True,ensure_ascii=False).encode('utf-8')).hexdigest()
+
+
+def checked_disk(number, identity=None):
+    disk=next((d for d in disks() if d['Number']==number),None)
+    if not disk or not disk_eligible(disk):
+        raise ValueError('Refusing a system, boot, read-only, offline or unsupported disk')
+    if identity and disk_identity(disk)!=identity:
+        raise ValueError('Target device changed. Refresh and select the card again.')
+    return disk
 
 def write_card(args):
     import ctypes
@@ -251,16 +305,13 @@ def write_card(args):
     inspect(image)  # Validate the entire image before any disk write.
     if args.disk != args.confirm_disk: raise ValueError('--confirm-disk must equal --disk')
     if not ctypes.windll.shell32.IsUserAnAdmin(): raise ValueError('Run in an Administrator terminal')
-    disk=next((d for d in disks() if d['Number']==args.disk),None)
-    if not disk or disk['IsBoot'] or disk['IsSystem'] or disk['IsReadOnly']:
-        raise ValueError('Refusing a system, boot, read-only or unknown disk')
-    if str(disk['BusType']).lower() not in ('usb','sd','mmc','7','12','13'):
-        raise ValueError('Only USB/SD/MMC card devices are supported')
+    disk=checked_disk(args.disk,getattr(args,'disk_identity',None))
+    identity=disk_identity(disk)
     if image.stat().st_size>disk['Size']: raise ValueError('Image exceeds card capacity')
     drive=image.drive.rstrip(':')
     # Reject an image stored on the disk about to be overwritten.
     location_script=f"(Get-Partition -DriveLetter '{drive}' | Get-Disk).Number"
-    location=subprocess.run(['powershell.exe','-NoProfile','-Command',location_script],capture_output=True,check=True)
+    location=subprocess.run(['powershell.exe','-NoProfile','-Command',location_script],capture_output=True,check=True,creationflags=CREATE_NO_WINDOW)
     if location.stdout.strip()==str(args.disk).encode(): raise ValueError('Image is stored on target disk')
     kernel=ctypes.WinDLL('kernel32',use_last_error=True)
     kernel.CreateFileW.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,wintypes.LPVOID,wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
@@ -273,8 +324,9 @@ def write_card(args):
         if not kernel.DeviceIoControl(handle,code,None,0,None,0,ctypes.byref(returned),None):
             raise ctypes.WinError(ctypes.get_last_error())
     script=f"Get-Partition -DiskNumber {args.disk} | Where-Object DriveLetter | Select-Object -ExpandProperty DriveLetter"
-    volumes=subprocess.run(['powershell.exe','-NoProfile','-Command',script],capture_output=True,check=True).stdout.decode().split()
+    volumes=subprocess.run(['powershell.exe','-NoProfile','-Command',script],capture_output=True,check=True,creationflags=CREATE_NO_WINDOW).stdout.decode().split()
     with contextlib.ExitStack() as stack:
+        checked_disk(args.disk,identity)
         for letter in volumes:
             handle=kernel.CreateFileW('\\\\.\\'+letter+':',0xc0000000,3,None,3,0,None)
             if handle==invalid: raise ctypes.WinError(ctypes.get_last_error())
@@ -283,18 +335,25 @@ def write_card(args):
             stack.callback(ioctl,handle,0x9001c)
             ioctl(handle,0x90020)  # FSCTL_DISMOUNT_VOLUME
         target='\\\\.\\PhysicalDrive'+str(args.disk)
+        checked_disk(args.disk,identity)
         print(f'Writing {image.stat().st_size} bytes to disk {args.disk}: {disk["FriendlyName"]}',flush=True)
         expected=hashlib.sha256()
         with image.open('rb') as src, open(target,'r+b',buffering=0) as dst:
+            total=image.stat().st_size;written=0
+            print(f'PROGRESS write 0 {total}',flush=True)
             while block:=src.read(1024*1024):
                 expected.update(block)
                 if dst.write(block)!=len(block): raise OSError('Short disk write')
+                written+=len(block)
+                print(f'PROGRESS write {written} {total}',flush=True)
             os.fsync(dst.fileno()); dst.seek(0)
             actual=hashlib.sha256(); remaining=image.stat().st_size
+            print(f'PROGRESS verify 0 {total}',flush=True)
             while remaining:
                 block=dst.read(min(1024*1024,remaining))
                 if not block: raise OSError('Short disk verify read')
                 actual.update(block); remaining-=len(block)
+                print(f'PROGRESS verify {total-remaining} {total}',flush=True)
             if actual.digest()!=expected.digest(): raise ValueError('Card SHA-256 verification failed')
         print('Write and full readback verified. SHA256='+expected.hexdigest())
 
@@ -304,11 +363,13 @@ def main():
     p=sub.add_parser('pack'); p.add_argument('inputs',nargs='+'); p.add_argument('-o','--output',required=True)
     p.add_argument('--ffmpeg'); p.add_argument('--quality',type=int,default=75)
     p.add_argument('--max-frame-bytes',type=int,default=28000)
+    p.add_argument('--subtitles',help='JSON: up to ten fixed-font subtitles')
     p.add_argument('--max-frames',type=int); p.add_argument('--audio',action='store_true')
     p=sub.add_parser('inspect'); p.add_argument('image')
     sub.add_parser('disks')
     p=sub.add_parser('write'); p.add_argument('image'); p.add_argument('--disk',type=int,required=True)
     p.add_argument('--confirm-disk',type=int,required=True)
+    p.add_argument('--disk-identity',help='Expected device identity from disks; refuse a changed target')
     args=parser.parse_args()
     try:
         if args.command=='pack': pack(args)

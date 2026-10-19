@@ -1,0 +1,164 @@
+PASS: 214 relative TD references, firmware manifest, accepted bitstream and offline dependency hashes
+PASS: fixed Huffman profile accepts standard tables, rejects optimized tables/restart intervals
+Convert 1/1: bars.png
+{
+  "path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\tfmedia3-tests-xbvf92bp\\pictures.img",
+  "sectors": 17,
+  "bytes": 8704,
+  "media": [
+    {
+      "index": 0,
+      "type": "image",
+      "frames": 1,
+      "jpeg_bytes": 6329,
+      "max_frame_bytes": 6329,
+      "audio_bytes": 0,
+      "estimated_stream_bytes_per_second": 0
+    }
+  ],
+  "subtitles": []
+}
+Convert 1/1: 图片.png
+{
+  "path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\tfmedia3-tests-xbvf92bp\\with-subtitles.img",
+  "sectors": 40,
+  "bytes": 20480,
+  "media": [
+    {
+      "index": 0,
+      "type": "image",
+      "frames": 1,
+      "jpeg_bytes": 7061,
+      "max_frame_bytes": 7061,
+      "audio_bytes": 0,
+      "estimated_stream_bytes_per_second": 0
+    }
+  ],
+  "subtitles": [
+    {
+      "characters": 9,
+      "color": "#123400",
+      "rainbow": false
+    },
+    {
+      "characters": 9,
+      "color": "#123401",
+      "rainbow": true
+    },
+    {
+      "characters": 9,
+      "color": "#123402",
+      "rainbow": false
+    },
+    {
+      "characters": 9,
+      "color": "#123403",
+      "rainbow": true
+    },
+    {
+      "characters": 9,
+      "color": "#123404",
+      "rainbow": false
+    },
+    {
+      "characters": 9,
+      "color": "#123405",
+      "rainbow": true
+    },
+    {
+      "characters": 9,
+      "color": "#123406",
+      "rainbow": false
+    },
+    {
+      "characters": 9,
+      "color": "#123407",
+      "rainbow": true
+    },
+    {
+      "characters": 9,
+      "color": "#123408",
+      "rainbow": false
+    },
+    {
+      "characters": 32,
+      "color": "#123409",
+      "rainbow": true
+    }
+  ]
+}
+Convert 1/1: 图片.png
+{
+  "path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\tfmedia3-tests-xbvf92bp\\with-subtitles.img",
+  "sectors": 18,
+  "bytes": 9216,
+  "media": [
+    {
+      "index": 0,
+      "type": "image",
+      "frames": 1,
+      "jpeg_bytes": 7061,
+      "max_frame_bytes": 7061,
+      "audio_bytes": 0,
+      "estimated_stream_bytes_per_second": 0
+    }
+  ],
+  "subtitles": []
+}
+PASS: host subtitle limits/styles, all-sector CRCs, card roundtrip, empty legacy format and Chinese-path image preview
+PASS: subtitle loader, 5120 bitmap words, ten styles, CRC errors, timeout and legacy/range fallbacks
+PASS: ten subtitle selections, wrap both ways, stable CDC mailbox and latest rapid selection
+PASS: custom subtitle RAM bank9, fixed/rainbow styles, 1/32 glyphs, default fallback and 640x480 AXI alignment
+PASS: playback info arithmetic, coherent CDC, pause/seek/switch, image/video time, individual switches and AXI alignment
+PASS: subtitle S0/S1 debounce, held-key release, normal-key isolation and SW0 priority
+PASS: volume mode, debounce, key isolation, retention, bounds and signed PCM gain at all 17 levels
+PASS: volume OSD smooth increase/decrease, mute/full range, frame-latched visibility, RGB passthrough and 640x480 AXI alignment
+PASS: all 17 brightness levels and 256 RGB input values, including first pixel after gain changes
+PASS: all 17 contrast levels x 256 RGB inputs, saturation, unity, first pixel and frame-held settings
+PASS: production contrast -> brightness/OSD -> AXI pipeline, 2 full frames, purple/gray palette and contrast icon
+PASS: media marquee, changing Chinese colors, gold Latin/punctuation, frame-held color/position, scroll/wrap/restart and 4 full 640x480 AXI frames
+PASS: waveform signed extrema, frame bins, 32-bin history, stable scans, silence, pixel rendering, enable and AXI alignment
+PASS: true two-page RGB blend all 17 levels, both page directions, SDRAM burst order, FIFO backpressure and full 640x480 frame (37 cases)
+PASS: only picture-to-picture blends, first picture and video frames/transitions bypass, page ownership held through 16 levels
+PASS: video pause and slideshow stopped icons, frame-latched status, outside pixels and four full AXI frames
+PASS TFMEDIA3 catalog parser
+PASS: RTL catalog rejects corrupted superblock CRC
+PASS: first init_done request reaches CMD17 once
+PASS: 4 pages change only at vblank and retire after SDRAM read ACK
+PASS: 55.72-second/1393-frame audio timeline has zero accumulated sample drift, pause and stalled PCM hold time
+PASS: last in-flight PCM sample is counted at pause edge so EOF cannot hang
+PASS: silent video uses 25-fps reader clock and completes after its last full period
+PASS: PCM ring wrap/sample ordering, exact consumed playhead, pause and clean EOF
+PASS: 960 lines, 640 pixels/EOL, 2 SOF; 4388 595 packets and latch spacing
+PASS: jpeg_sram_dma alignment, odd-tail and 64-KiB cases
+PASS: timeout freezes write-ACK, SRAM, feed, decode and SDRAM-finish stages/flags/word index
+PASS: JPEG EOI consumed for all four final-word byte alignments
+PASS: JPEG dimensions survive SRAM input gaps and FF-stuffed word rollover
+PASS: JPEG dimensions survive SRAM input gaps and FF-stuffed word rollover
+PASS: actual top clears stalled JPEG on media change and accepts subsequent media twice
+PASS: actual top holds future frames until PCM playhead, respects pause and clears pending pages on media switch
+PASS: picture/video pause status classification, resume and media-change gating
+PASS: SW3 independent marquee on pictures AND videos, transition/invalid-media gating and normal key passthrough
+PASS: actual top debounces SW5/SW6/SW7 independently and together without entering key setting modes
+PASS: actual top SW3 custom subtitle key wiring, bidirectional selection and normal-key restoration
+PASS: SW4 independently enables/disables waveform through the actual top and HDMI shell
+PASS: actual top isolates volume keys, retains gain across media changes and forwards scaled PCM/ACK
+PASS: actual top retries init errors/hung sectors, clears display/decode/subtitle selection, mutes, retains settings and never resets HDMI
+PASS: all 25 eight-ns completion events cross 125 MHz to 40 MHz exactly once
+PASS: production HDMI shell resets storage/page CDC and mutes without resetting video timing, PHY or clocks; new completions survive
+PASS: absent card retries repeatedly without manual reset; catalog/subtitle/audio/cache invalidated
+PASS: late insertion loads validated card and two custom subtitles from media zero
+PASS: hung sector after removal triggers watchdog and clears the full reader chain
+PASS: corrupt replacement rejected and retry continues
+PASS: replacement starts first media with default subtitle fallback, no old-card subtitle leakage
+PASS: pause holds presentation while next frame is cached
+PASS: 3 video frames cached/presented in order, final frame retained
+PASS: automatic video completion/reload and six frame presentations with audio SD traffic
+PASS: pause holds presentation while next frame is cached
+PASS: 3 video frames cached/presented in order, final frame retained
+PASS: automatic video completion/reload and six frame presentations with audio SD traffic
+PASS: pause holds presentation while next frame is cached
+PASS: 3 video frames cached/presented in order, final frame retained
+PASS: automatic video completion/reload and six frame presentations with audio SD traffic
+PASS: late cached frame discarded, direct seek 1 -> 9, spare SRAM ownership and last-frame clamp preserved
+PASS: host pack/inspect, CRC rejection and requested RTL tests

@@ -32,9 +32,9 @@ with tempfile.TemporaryDirectory(prefix='tfmedia3-hdmi-cdc-') as temp:
     compiled = subprocess.run([str(exe), '-g2012', '-s', 'tb_frame_finish_cdc', '-o', str(target),
         str(root / 'sim/tb_frame_finish_cdc.v'), str(tf / 'tfmedia3_hdmi_shell.v'),
         str(tf / 'reset_control.v'), str(tf / 'volume_bar_overlay.v'),
-        str(tf / 'scroll_text_overlay.v'), str(tf / 'scroll_text_font.v'),
+        str(tf / 'configurable_scroll_text.v'), str(root / 'sim/subtitle_bram_model.v'), str(tf / 'scroll_text_overlay.v'), str(tf / 'scroll_text_font.v'),
         str(tf / 'audio_wave_overlay.v'),
-        str(tf / 'pause_status_overlay.v'),
+        str(tf / 'pause_status_overlay.v'),str(tf / 'playback_info_overlay.v'),
         str(root / 'user_source/hdl_source/video_rgb_to_axis_640x480.v'), str(work / 'stubs.v')],
         capture_output=True, text=True)
     # Scalar inert-shell ports deliberately cause width warnings.

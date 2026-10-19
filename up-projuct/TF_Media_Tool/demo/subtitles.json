@@ -1,0 +1,6 @@
+{
+  "subtitles": [
+    {"text": "欢迎观看 FPGA 多媒体演示", "color": "#22D3EE", "rainbow": false},
+    {"text": "固定字体彩色滚动字幕", "color": "#FDE68A", "rainbow": true}
+  ]
+}

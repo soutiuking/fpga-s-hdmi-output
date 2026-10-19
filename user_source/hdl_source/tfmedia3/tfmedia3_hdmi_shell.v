@@ -8,6 +8,8 @@ module tfmedia3_hdmi_shell #(
 )(
     input  wire clk,
     input  wire rst,
+    input  wire media_reset,
+    input  wire audio_enable,
     input  wire reader_clk,
     input  wire mem_clk,
     input  wire mem_clk_sft,
@@ -31,9 +33,15 @@ module tfmedia3_hdmi_shell #(
     input  wire [4:0] brightness_level,
     input  wire contrast_setting,
     input  wire [4:0] contrast_level,
+    input subtitle_ram_we,input [12:0] subtitle_ram_address,input [15:0] subtitle_ram_data,
+    input [35:0] subtitle_config_packet,input subtitle_config_toggle,output subtitle_config_ack,
     input  wire scroll_setting,
     input  wire picture_playing,
     input  wire wave_setting,
+    input [2:0] info_setting,
+    input [31:0] info_position, info_length, info_rate,
+    input [4:0] info_media_index, info_media_count,
+    input info_valid,
     input wire display_picture, input wire [1:0] pause_status,
     output wire HDMI_CLK_P,
     output wire HDMI_D2_P,
@@ -52,6 +60,16 @@ wire rst_all, rst_mem, rst_reader;
 reset_sync u_video_reset(.clk(video_clk), .async_rst(rst_async), .rst(rst_all));
 reset_sync u_mem_reset(.clk(mem_clk), .async_rst(rst_async), .rst(rst_mem));
 reset_sync u_reader_reset(.clk(reader_clk), .async_rst(rst_async), .rst(rst_reader));
+// Reset the storage-backed pages and their CDC mailboxes together. Pixel
+// timing, EDID, HDMI PHY and all PLLs keep running during card retries.
+wire media_rst_mem,media_rst_video,media_rst_reader;
+reset_sync u_media_mem_reset(.clk(mem_clk),.async_rst(rst_async | media_reset),.rst(media_rst_mem));
+reset_sync u_media_video_reset(.clk(video_clk),.async_rst(rst_async | media_reset),.rst(media_rst_video));
+reset_sync u_media_reader_reset(.clk(reader_clk),.async_rst(rst_async | media_reset),.rst(media_rst_reader));
+reg [1:0] audio_enable_sync;
+always @(posedge video_clk or posedge rst_all)
+    if(rst_all) audio_enable_sync<=0;
+    else audio_enable_sync<={audio_enable_sync[0],audio_enable};
 wire visible_slot, visible_valid;
 wire        video_read_req;
 wire        video_read_req_ack;
@@ -63,11 +81,11 @@ always @(posedge video_clk or posedge rst_all)
 wire blend_active;
 wire [4:0] blend_level;
 frame_present_cdc #(.ENABLE_BLEND(1)) u_present(
-    .reader_clk(reader_clk), .reader_rst(rst_reader),
+    .reader_clk(reader_clk), .reader_rst(media_rst_reader),
     .submit(display_submit), .submit_slot(display_slot), .submit_valid(display_valid),
     .submit_picture(display_picture),
     .busy(presentation_busy), .presented(frame_presented),
-    .video_clk(video_clk), .video_rst(rst_all),
+    .video_clk(video_clk), .video_rst(media_rst_video),
     .frame_boundary(video_read_req && !video_read_req_d),
     .read_ack(video_read_req_ack), .video_slot(visible_slot), .video_valid(visible_valid),
     .blend_active(blend_active),.blend_level(blend_level));
@@ -143,15 +161,15 @@ assign frame_write_req_ack = frame_write_ack_sync[2];
 // Transfer the 8-ns memory completion as an event to the 25-ns reader clock.
 assign frame_write_finish = frame_write_finish_sync[2] ^ frame_write_finish_seen;
 
-always @(posedge mem_clk or posedge rst_mem) begin
-    if (rst_mem)
+always @(posedge mem_clk or posedge media_rst_mem) begin
+    if (media_rst_mem)
         frame_write_finish_toggle <= 1'b0;
     else if (frame_write_finish_mem)
         frame_write_finish_toggle <= ~frame_write_finish_toggle;
 end
 
-always @(posedge reader_clk or posedge rst_reader) begin
-    if (rst_reader) begin
+always @(posedge reader_clk or posedge media_rst_reader) begin
+    if (media_rst_reader) begin
         frame_write_ack_sync    <= 3'b000;
         frame_write_finish_sync <= 3'b000;
         frame_write_finish_seen <= 1'b0;
@@ -207,9 +225,11 @@ volume_bar_overlay u_volume_osd (
 
 wire text_vs, text_de;
 wire [23:0] text_rgb;
-scroll_text_overlay u_scroll_text (
+configurable_scroll_text u_scroll_text (
     .clk(video_clk), .rst(rst_all),
     .enable_async(scroll_setting), .picture_async(picture_playing),
+    .reader_clk(reader_clk),.ram_we(subtitle_ram_we),.ram_address(subtitle_ram_address),.ram_data(subtitle_ram_data),
+    .config_packet(subtitle_config_packet),.config_toggle(subtitle_config_toggle),.config_ack(subtitle_config_ack),
     .vs_in(osd_vs), .de_in(osd_de), .rgb_in(osd_rgb),
     .vs_out(text_vs), .de_out(text_de), .rgb_out(text_rgb)
 );
@@ -227,10 +247,18 @@ pause_status_overlay u_pause_status (
     .vs_in(wave_vs),.de_in(wave_de),.rgb_in(wave_rgb),
     .vs_out(status_vs),.de_out(status_de),.rgb_out(status_rgb)
 );
+wire info_vs,info_de;wire [23:0] info_rgb;
+playback_info_overlay u_info(
+    .reader_clk(reader_clk),.reader_rst(rst_reader),
+    .position(info_position),.length(info_length),.ticks_per_second(info_rate),
+    .media_index(info_media_index),.media_count(info_media_count),.valid(info_valid),
+    .clk(video_clk),.rst(rst_all),.enable_async(info_setting),
+    .vs_in(status_vs),.de_in(status_de),.rgb_in(status_rgb),
+    .vs_out(info_vs),.de_out(info_de),.rgb_out(info_rgb));
 video_rgb_to_axis_640x480 u_video_axis (
-    .I_clk(video_clk), .I_rst(rst_all), .I_vs(status_vs),
-    .I_de(status_de),
-    .I_rgb(status_rgb),
+    .I_clk(video_clk), .I_rst(rst_all), .I_vs(info_vs),
+    .I_de(info_de),
+    .I_rgb(info_rgb),
     .O_video_user(axis_s_user), .O_video_valid(axis_s_valid),
     .O_video_last(axis_s_last), .O_video_data(axis_s_data)
 );
@@ -238,7 +266,7 @@ video_rgb_to_axis_640x480 u_video_axis (
 frame_read_write #(
     .WRITE_V_FLIP(0), .FRAME_WIDTH(640), .FRAME_HEIGHT(480),.ENABLE_BLEND(1)
 ) u_framebuffer (
-    .rst(rst_mem), .mem_clk(mem_clk), .Sdr_init_done(sdr_init_done),
+    .rst(media_rst_mem), .mem_clk(mem_clk), .Sdr_init_done(sdr_init_done),
     .Sdr_init_ref_vld(sdr_init_ref_vld), .Sdr_busy(sdr_busy),
     .App_rd_en(app_rd_en), .App_rd_addr(app_rd_addr),
     .Sdr_rd_en(sdr_rd_en), .Sdr_rd_dout(sdr_rd_dout),
@@ -262,7 +290,7 @@ frame_read_write #(
 );
 
 sdram u_sdram (
-    .Clk(mem_clk), .Clk_sft(mem_clk_sft), .Rst(rst_mem),
+    .Clk(mem_clk), .Clk_sft(mem_clk_sft), .Rst(media_rst_mem),
     .Sdr_init_done(sdr_init_done), .Sdr_init_ref_vld(sdr_init_ref_vld),
     .Sdr_busy(sdr_busy), .App_wr_en(app_wr_en),
     .App_wr_addr(app_wr_addr), .App_wr_dm(app_wr_dm),
@@ -308,8 +336,8 @@ hdmi_1_4b_transmitter_core_wrapper #(
     .O_edid_read_data(edid_data_unused), .I_axis_s_user(axis_s_user),
     .I_axis_s_valid(axis_s_valid), .I_axis_s_last(axis_s_last),
     .I_axis_s_data(axis_s_data), .O_axis_s_ready(axis_s_ready),
-    .I_audio_valid(audio_valid), .I_audio_left_data(audio_left_data),
-    .I_audio_right_data(audio_right_data), .I_acr_valid(acr_valid),
+    .I_audio_valid(audio_valid), .I_audio_left_data(audio_enable_sync[1] ? audio_left_data : 24'd0),
+    .I_audio_right_data(audio_enable_sync[1] ? audio_right_data : 24'd0), .I_acr_valid(acr_valid),
     .I_acr_cts(acr_cts), .I_acr_n(acr_n), .O_video_locked(),
     .O_ddc_scl(ddc_scl), .IO_ddc_sda(ddc_sda),
     .O_ch0_tmds_data(tmds_ch0_data), .O_ch1_tmds_data(tmds_ch1_data),

@@ -52,7 +52,13 @@ module tfmedia3_reader_frontend #(
     output reg [7:0]  player_error,
     output reg [3:0]  player_state,
     output reg        media_changing,
-    output            sd_initialized
+    output subtitle_ram_we, output [12:0] subtitle_ram_address, output [15:0] subtitle_ram_data,
+    output [3:0] subtitle_count,input [3:0] subtitle_style_index,output [30:0] subtitle_style_data,
+    output [31:0] info_position, info_length, info_rate,
+    output [4:0] info_media_count,
+    output info_valid,
+    output            sd_initialized,
+    output            storage_busy
 );
 
 localparam [3:0] P_WAIT_CATALOG = 4'd0;
@@ -166,8 +172,16 @@ reg [4:0]  last_media_index;
 reg [31:0] last_frame_number;
 reg [27:0] init_wait_count;
 
+assign info_position = entry_media_type==1 ? play_timer :
+                       timeline_complete ? frame_count : playback_frame_number;
+assign info_length = entry_media_type==1 ? IMAGE_PERIOD_CLKS : frame_count;
+assign info_rate = entry_media_type==1 ? CLK_HZ : 25;
+assign info_media_count = entry_count;
+assign info_valid = metadata_ready && !media_changing && !switch_pending &&
+                    player_error==0 && (player_state>=P_REQ_FRAME && player_state<=P_WAIT_PRESENT);
 assign media_type    = entry_media_type;
 assign sd_initialized = sd_init_done;
+assign storage_busy = arbiter_busy_unused;
 
 tfmedia3_playback_clock #(.CLK_HZ(CLK_HZ)) u_playback_clock (
     .clk(clk), .rst(rst || load_media),
@@ -203,10 +217,23 @@ sd_card_top #(
     .sd_sec_write_data_req(), .sd_sec_write_end()
 );
 
+wire [31:0] subtitle_lba;
+wire sub_done,sub_read;wire [31:0] sub_addr;wire [3:0] loaded_sub_count;
+wire shared_valid,shared_end;
+wire subtitle_loading=catalog_ready && !sub_done;
+assign cat_valid=shared_valid && !subtitle_loading;
+assign cat_end=shared_end && !subtitle_loading;
+assign subtitle_count=sub_done ? loaded_sub_count : 4'd0;
+subtitle_loader #(.TIMEOUT_CLKS(CLK_HZ*2)) u_subtitles(
+ .clk(clk),.rst(rst),.start(catalog_ready),.base_lba(subtitle_lba),.total_sectors(total_sectors_unused),
+ .sd_read(sub_read),.sd_addr(sub_addr),.sd_data(arbiter_data),
+ .sd_valid(shared_valid && subtitle_loading),.sd_end(shared_end && subtitle_loading),
+ .done(sub_done),.count(loaded_sub_count),.style_index(subtitle_style_index),.style_data(subtitle_style_data),
+ .ram_we(subtitle_ram_we),.ram_address(subtitle_ram_address),.ram_data(subtitle_ram_data));
 sd_sector_arbiter4 u_arbiter (
     .clk(clk), .rst(rst),
-    .c0_read(cat_read), .c0_addr(cat_addr),
-    .c0_data_valid(cat_valid), .c0_read_end(cat_end),
+    .c0_read(subtitle_loading ? sub_read : cat_read), .c0_addr(subtitle_loading ? sub_addr : cat_addr),
+    .c0_data_valid(shared_valid), .c0_read_end(shared_end),
     .c1_read(meta_read), .c1_addr(meta_addr),
     .c1_data_valid(meta_valid), .c1_read_end(meta_end),
     .c2_read(dma_read), .c2_addr(dma_addr),
@@ -225,7 +252,7 @@ tfmedia3_catalog #(.READ_TIMEOUT_CLKS(CLK_HZ * 2)) u_catalog (
     .sd_sec_read_data(arbiter_data),
     .sd_sec_read_data_valid(cat_valid), .sd_sec_read_end(cat_end),
     .catalog_ready(catalog_ready), .error_code(catalog_error),
-    .entry_count(entry_count), .total_sectors(total_sectors_unused),
+    .entry_count(entry_count), .total_sectors(total_sectors_unused),.subtitle_lba(subtitle_lba),
     .entry_select(media_index), .entry_media_type(entry_media_type),
     .entry_flags(entry_flags_unused), .entry_media_id(entry_media_id_unused),
     .entry_metadata_lba(entry_metadata_lba), .entry_data_lba(entry_data_lba),
@@ -349,7 +376,7 @@ always @(posedge clk or posedge rst) begin
                 if (catalog_error != 0) begin
                     player_error <= catalog_error;
                     player_state <= P_ERROR;
-                end else if (catalog_ready) begin
+                end else if (catalog_ready && sub_done) begin
                     media_index  <= 5'd0;
                     last_media_index <= (entry_count == 0) ? 5'd0 :
                                         (entry_count - 1'b1);

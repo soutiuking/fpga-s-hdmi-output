@@ -25,3 +25,5 @@
 *.area -text -whitespace
 *.timing -text -whitespace
 *.mkv binary
+# Preserve the submission snapshot byte-for-byte, including manifest hashes.
+/up-projuct/** -text !eol

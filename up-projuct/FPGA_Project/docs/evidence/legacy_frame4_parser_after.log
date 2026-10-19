@@ -1,0 +1,1 @@
+PASS: JPEG dimensions survive SRAM input gaps and FF-stuffed word rollover

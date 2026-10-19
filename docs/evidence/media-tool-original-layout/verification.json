@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "standalone_launcher_exit": 0,
+  "package": "D:\\hdmi\\useing\\dist\\FPGA_TF_Media_Tool_Windows_x64_字幕增强版-20261019-211611-446313",
+  "original_preserved": "D:/hdmi/FPGA_TF_Media_Tool_Windows_x64",
+  "checks": [
+    "standalone EXE launched outside package working directory",
+    "image preview",
+    "video playback and seek",
+    "10 subtitle entries and 32-character limits",
+    "fixed color and rainbow metadata",
+    "subtitle CRC rejection",
+    "empty subtitle legacy fallback",
+    "card removal and disk-number reuse protection",
+    "device capacity/serial/path identity guard",
+    "full generated-image validation"
+  ],
+  "physical_write_tested": false,
+  "reason": "No TF/USB/SD/MMC card attached; only internal NVMe devices enumerated"
+}

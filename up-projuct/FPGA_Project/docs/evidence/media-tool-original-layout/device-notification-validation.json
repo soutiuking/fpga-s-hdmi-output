@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "idle_seconds": 22,
+  "idle_inventory_queries": 1,
+  "checks": [
+    "real Windows device notifications",
+    "hotplug burst debounce",
+    "selection consent cleared",
+    "device scan deferred during jobs",
+    "manual refresh",
+    "window procedure restored"
+  ],
+  "physical_writes": false
+}

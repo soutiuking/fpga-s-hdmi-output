@@ -56,6 +56,11 @@ wire [16:0] bytes;
 wire [7:0] error;
 wire [3:0] state;
 wire [31:0] frame_number;
+wire [3:0] subtitle_count;
+integer expected_subtitles=0;
+initial begin
+ if($value$plusargs("expect_subtitles=%d",expected_subtitles))begin end
+end
 reg ready=1,presented=0,pending=0,due=0;
 reg audio_request=0;
 integer audio_divider=0;
@@ -75,6 +80,7 @@ tfmedia3_reader_frontend #(.CLK_HZ(100000)) dut(
  .frame_presented(presented),.audio_playback_enable(presentations!=0 && !paused),
  .audio_sample_request_toggle(audio_request),.audio_sample_ack_toggle(audio_ack),
  .paused(paused),.frame_cached(cached),.frame_tick(tick),.cached_slot(slot),
+ .subtitle_count(subtitle_count),.subtitle_style_index(4'd0),
  .cached_bytes(bytes),.frame_number(frame_number),.player_error(error),.player_state(state));
 always @(posedge clk) begin
  presented<=0;
@@ -88,6 +94,7 @@ always @(posedge clk) begin
   if(error) $fatal(1,"reader error %h state %h",error,state);
   if(tick) due<=1;
   if(cached) begin
+   if(subtitle_count!==expected_subtitles)$fatal(1,"boot subtitle integration count=%d expected=%d",subtitle_count,expected_subtitles);
    if(!ready || slot!==((submissions%3)%2)) $fatal(1,"slot ownership violation");
    if(memory[slot?32768:0]!==16'hd8ff || bytes==0) $fatal(1,"bad cached JPEG");
    submissions=submissions+1;ready<=0;pending<=1;decode_delay=7000;

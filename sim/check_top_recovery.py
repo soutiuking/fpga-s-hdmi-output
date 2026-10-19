@@ -33,6 +33,9 @@ reg [7:0] switches=8'hff;
 reg volume_up_n=1,volume_down_n=1,pcm_ack=0;
 reg [15:0] pcm_data=0;
 reg [31:0] inject_playhead=0,inject_frame=0;
+reg inject_storage_fault=0,inject_sector_busy=0;
+wire [7:0] injected_storage_error=inject_storage_fault ? 8'h07 : 8'h00;
+wire [3:0] injected_subtitle_count=dut.storage_reset ? 4'd0 : 4'd2;
 integer commits=0;
 wire injected_reset=~reset_n;
 always #5 clk=~clk;
@@ -42,7 +45,12 @@ defparam dut.u_decode.DECODE_TIMEOUT_CLKS=120;
 defparam dut.u_volume.STABLE_CLKS=4;
 defparam dut.u_scroll_switch.STABLE_CLKS=4;
 defparam dut.u_wave_switch.STABLE_CLKS=4;
-integer retries;
+defparam dut.g_info_switch[0].u_switch.STABLE_CLKS=4;
+defparam dut.g_info_switch[1].u_switch.STABLE_CLKS=4;
+defparam dut.g_info_switch[2].u_switch.STABLE_CLKS=4;
+defparam dut.u_storage_recovery.TIMEOUT_CLKS=12;
+defparam dut.u_storage_recovery.RETRY_CLKS=8;
+integer retries, info_sw;
 initial begin
  force dut.frame_cached=inject_cached;
  force dut.cached_bytes=17'd12;
@@ -189,8 +197,57 @@ initial begin
  if(dut.u_hdmi_shell.pause_status!==0) $fatal(1,"pause status shown during media change");
  $display("PASS: picture/video pause status classification, resume and media-change gating");
  $display("PASS: SW3 independent marquee on pictures AND videos, transition/invalid-media gating and normal key passthrough");
+ switches=8'hff;
+ repeat(12) @(negedge clk);
+ for(info_sw=0;info_sw<3;info_sw=info_sw+1) begin
+   switches=8'hff ^ (8'h20 << info_sw);
+   repeat(12) @(negedge clk);
+   if(dut.u_hdmi_shell.info_setting!==(3'b001 << info_sw))
+       $fatal(1,"SW5/SW6/SW7 individual wiring failed");
+ end
+ switches=8'h1f;repeat(12) @(negedge clk);
+ if(dut.u_hdmi_shell.info_setting!==3'b111) $fatal(1,"combined info switches failed");
+ switches=8'hff;repeat(12) @(negedge clk);
+ if(dut.u_hdmi_shell.info_setting!==0 || dut.volume_mode || dut.brightness_mode || dut.contrast_mode)
+     $fatal(1,"info switch disable/key mode isolation failed");
+ $display("PASS: actual top debounces SW5/SW6/SW7 independently and together without entering key setting modes");
+ force dut.subtitle_count=4'd10;
+ force dut.subtitle_style_data={1'b0,24'h22d3ee,6'd12};
+ switches=8'hf7;repeat(16)@(negedge clk);
+ volume_up_n=0;repeat(12)@(negedge clk);volume_up_n=1;repeat(12)@(negedge clk);
+ if(dut.subtitle_style_index!=1 || !dut.next_key_n || !dut.pause_key_n)
+     $fatal(1,"actual top subtitle next/key routing");
+ volume_down_n=0;repeat(12)@(negedge clk);volume_down_n=1;repeat(12)@(negedge clk);
+ if(dut.subtitle_style_index!=0)$fatal(1,"actual top subtitle previous");
+ switches=8'hff;repeat(16)@(negedge clk);
+ volume_up_n=0;repeat(12)@(negedge clk);
+ if(dut.next_key_n)$fatal(1,"actual top normal next key after SW3 off");
+ volume_up_n=1;repeat(12)@(negedge clk);
+ release dut.subtitle_count;release dut.subtitle_style_data;
+ $display("PASS: actual top SW3 custom subtitle key wiring, bidirectional selection and normal-key restoration");
  $display("PASS: SW4 independently enables/disables waveform through the actual top and HDMI shell");
  $display("PASS: actual top isolates volume keys, retains gain across media changes and forwards scaled PCM/ACK");
+ force dut.player_error=injected_storage_error;
+ force dut.storage_busy=inject_sector_busy;
+ force dut.subtitle_count=injected_subtitle_count;
+ release dut.display_valid;
+ inject_pause=0;inject_change=0;
+ inject_storage_fault=1;
+ wait(dut.storage_reset);@(negedge clk);
+ if(dut.board_rst || dut.u_hdmi_shell.rst || !dut.u_reader.rst || !dut.u_decode.rst ||
+    !dut.u_hdmi_shell.media_reset || dut.display_valid || dut.decoded_pending || dut.presentation_submit || dut.audio_playback_enable)
+   $fatal(1,"storage retry reset isolation/mute/cache invalidation failed");
+ if(dut.volume!=15 || dut.brightness!=15 || dut.contrast!=9)
+   $fatal(1,"card retry reset user settings");
+ inject_storage_fault=0;
+ wait(!dut.storage_reset);repeat(6)@(negedge clk);
+ if(dut.subtitle_style_index!=0)$fatal(1,"subtitle selection survived old-card removal");
+ inject_sector_busy=1;
+ wait(dut.storage_reset);@(negedge clk);
+ if(dut.u_hdmi_shell.rst || dut.board_rst || dut.audio_playback_enable)
+   $fatal(1,"sector watchdog disturbed HDMI or failed to mute");
+ inject_sector_busy=0;wait(!dut.storage_reset);
+ $display("PASS: actual top retries init errors/hung sectors, clears display/decode/subtitle selection, mutes, retains settings and never resets HDMI");
  $finish;
 end
 initial begin #100000; $fatal(1,"top recovery hung"); end
@@ -202,7 +259,7 @@ endmodule
                     str(root/'sim/tb_jpeg_timeout_debug.v'),str(tf/'tfmedia3_top.v'),
                     str(tf/'jpeg_decode_pipeline.v'),str(tf/'seg7_serial_8digit.v'),
                     str(tf/'reset_control.v'),str(tf/'player_volume_control.v'),
-                    str(tf/'button_debounce_pulse.v')],check=True)
+                    str(tf/'subtitle_select.v'),str(tf/'button_debounce_pulse.v')],check=True)
     result=subprocess.run([str(exe.with_name('vvp.exe')),str(target)],check=True,text=True,capture_output=True)
     print(result.stdout,end='')
     if 'PASS:' not in result.stdout or any(s in result.stdout for s in ('FATAL:','FAIL','ERROR:')):

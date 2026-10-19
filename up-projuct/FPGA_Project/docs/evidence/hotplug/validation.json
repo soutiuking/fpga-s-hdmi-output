@@ -1,0 +1,72 @@
+{
+  "passed": true,
+  "build_id": "20261019-215059-170",
+  "place_seed": 11,
+  "bit": "firmware\\13_player_hotplug.bit",
+  "sha256": "f1c4e5998e8385385d529e2845d0864043395ebd5ca962037bf6b6d860791e5d",
+  "routed_timing_ns": {
+    "SWNS": 0.227,
+    "HWNS": 0.022,
+    "STNS": 0.0,
+    "HTNS": 0.0
+  },
+  "resources": {
+    "lut": {
+      "used": 16950,
+      "total": 19600
+    },
+    "register": {
+      "used": 10939,
+      "total": 19600
+    },
+    "bram9k": {
+      "used": 53,
+      "total": 64
+    },
+    "bram32k": {
+      "used": 16,
+      "total": 16
+    },
+    "dsp": {
+      "used": 29,
+      "total": 29
+    },
+    "pll": {
+      "used": 3,
+      "total": 4
+    }
+  },
+  "physical_slices": {
+    "mslice": 4880,
+    "lslice": 4876,
+    "total_each": 4900
+  },
+  "quick_regression_pass_messages": 59,
+  "regression_log": "docs/evidence/hotplug/regression.log",
+  "cases": [
+    "absent boot repeats retry",
+    "late insert loads validated first media and two subtitles",
+    "remove during sector with init_done stuck high triggers watchdog",
+    "clear catalog/metadata/subtitle count/PCM/cache",
+    "corrupt card rejected and retry continues",
+    "replacement without subtitles uses default",
+    "actual top resets playback and decoder only, retains user settings",
+    "actual HDMI page/completion CDC reset and mute, global video/PHY reset unaffected",
+    "normal/audio/custom/corrupt subtitle card lifecycle loops",
+    "pause, PCM timeline and catch-up regressions"
+  ],
+  "clock_constraints_unchanged": true,
+  "hardware_tested": false,
+  "limitation": "No card-detect pin: removal while paused and without reads is detected on next read/resume",
+  "source_sha256": {
+    "user_source/hdl_source/tfmedia3/reset_control.v": "5d1e5195c92ffacdf39d744abe6af5259ff0554462935a6384d3e01e9e25c122",
+    "user_source/hdl_source/tfmedia3/tfmedia3_top.v": "4dde190d8f59cff5b24f0c9138845076c93e671e2d4bd0aab7efc5bfe36a7e2b",
+    "user_source/hdl_source/tfmedia3/tfmedia3_reader_frontend.v": "745f50468cd48e956c0d4190e55e9f8b52e5c2ed637b032735847eb8c0924891",
+    "user_source/hdl_source/tfmedia3/tfmedia3_hdmi_shell.v": "e3c0875165b250c4c7d82734be556604fe97e0ff0e174565880b43ed9d2830ad",
+    "sim/tb_storage_hotplug.v": "6c287f52aec543405590e5c9855997c7bbdea7448417cdbd945c8fd0e92981c7",
+    "sim/check_storage_hotplug.py": "157853fa68ebd2597d5118c17c65ac5069f4882e2adfe0fb2a37f2e2cdbf4e3e",
+    "sim/check_top_recovery.py": "1f2fcc3db04ab263866272ce4bd2a04eb456aa0769a4ac90495488026790bbfc",
+    "sim/tb_frame_finish_cdc.v": "9071f5195d7711ac37aba4f5a14d6fafdc82c69e07ee0e0031c9cabd5e71a0d4",
+    "tools/build.ps1": "f391339f31f98d5db69f9f92c94ab687e96600c01a1681c62aed6b2790af0725"
+  }
+}

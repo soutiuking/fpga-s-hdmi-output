@@ -7,6 +7,8 @@ module player_volume_control #(
 )(
     input clk, rst,
     input sw0_n, sw1_n, sw2_n, key_up_n, key_down_n,
+    input subtitle_mode,
+    output subtitle_next,subtitle_prev,
     input sample_ack_in,
     input [15:0] sample_in,
     output reg sample_ack_out,
@@ -24,7 +26,8 @@ wire brightness_switch;
 wire contrast_switch;
 assign contrast_mode = contrast_switch && !volume_mode && !brightness_mode;
 assign brightness_mode = brightness_switch && !volume_mode;
-wire [2:0] setting_mode = {contrast_mode, brightness_mode, volume_mode};
+wire subtitle_active = subtitle_mode === 1'b1;
+wire [3:0] setting_mode = {subtitle_active,contrast_mode, brightness_mode, volume_mode};
 button_debounce_pulse #(.STABLE_CLKS(STABLE_CLKS)) u_contrast_mode (
     .clk(clk), .rst(rst), .button_n(sw2_n),
     .pressed(contrast_switch), .pressed_pulse());
@@ -41,12 +44,16 @@ button_debounce_pulse #(.STABLE_CLKS(STABLE_CLKS)) u_down (
     .clk(clk), .rst(rst), .button_n(key_down_n),
     .pressed(down_pressed), .pressed_pulse(down_pulse));
 
-reg [2:0] mode_seen;
+reg [3:0] mode_seen;
 reg armed;
 // After changing modes, require both buttons to be released. A held button
 // cannot turn into a next-media/pause command when leaving volume mode.
 assign next_key_n = !(armed && setting_mode == 0 && mode_seen == 0 && up_pressed);
 assign pause_key_n = !(armed && setting_mode == 0 && mode_seen == 0 && down_pressed);
+assign subtitle_next=armed && setting_mode==mode_seen && subtitle_active &&
+    !volume_mode && !brightness_mode && !contrast_mode && up_pulse && !down_pressed;
+assign subtitle_prev=armed && setting_mode==mode_seen && subtitle_active &&
+    !volume_mode && !brightness_mode && !contrast_mode && down_pulse && !up_pressed;
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         volume <= 5'd16;

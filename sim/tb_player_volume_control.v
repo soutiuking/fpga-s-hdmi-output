@@ -3,6 +3,12 @@ module tb_player_volume_control;
 reg clk=0, rst=1, sw=1, up=1, down=1, ack=0;
 reg sw1=1;
 reg sw2=1;
+reg subtitle_mode=0;wire subtitle_next,subtitle_prev;
+integer subtitle_next_count=0,subtitle_prev_count=0;
+always @(posedge clk)begin
+ if(subtitle_next)subtitle_next_count=subtitle_next_count+1;
+ if(subtitle_prev)subtitle_prev_count=subtitle_prev_count+1;
+end
 wire contrast_mode;
 wire [4:0] contrast;
 wire bright_mode;
@@ -16,6 +22,7 @@ player_volume_control #(.STABLE_CLKS(4)) dut (
     .clk(clk), .rst(rst), .sw0_n(sw), .sw1_n(sw1), .key_up_n(up), .key_down_n(down),
     .brightness_mode(bright_mode), .brightness(brightness),
     .sw2_n(sw2), .contrast_mode(contrast_mode), .contrast(contrast),
+    .subtitle_mode(subtitle_mode),.subtitle_next(subtitle_next),.subtitle_prev(subtitle_prev),
     .sample_ack_in(ack), .sample_in(pcm), .sample_ack_out(out_ack),
     .sample_out(out_pcm), .next_key_n(next_n), .pause_key_n(pause_n),
     .volume_mode(mode), .volume(volume));
@@ -112,6 +119,17 @@ initial begin
     if(contrast!=8) $fatal(1,"contrast reset default");
     if(brightness!=16) $fatal(1,"brightness reset");
     if(volume!=16) $fatal(1,"reset failed");
+    sw=1;sw1=1;sw2=1;up=1;down=1;settle;
+    subtitle_mode=1;settle;louder;quieter;
+    if(subtitle_next_count!=1 || subtitle_prev_count!=1 || !next_n || !pause_n)
+        $fatal(1,"subtitle keys did not isolate next-media/pause");
+    up=0;settle;settle;
+    if(subtitle_next_count!=2)$fatal(1,"subtitle held key repeated");
+    subtitle_mode=0;settle;if(!next_n)$fatal(1,"held subtitle key leaked on exit");
+    up=1;settle;up=0;settle;if(next_n)$fatal(1,"normal next key did not rearm");
+    subtitle_mode=1;settle;up=1;settle;sw=0;settle;quieter;
+    if(volume!=15 || subtitle_prev_count!=1)$fatal(1,"volume priority over subtitle keys");
+    $display("PASS: subtitle S0/S1 debounce, held-key release, normal-key isolation and SW0 priority");
     $display("PASS: volume mode, debounce, key isolation, retention, bounds and signed PCM gain at all 17 levels");
     $finish;
 end

@@ -48,3 +48,8 @@ Desktop.ini
 /td_project/al_ip/AUDIO_SAMPLE_ROM.*
 /td_project/al_ip/PLL.*
 /RELEASE_MANIFEST.json
+# Frozen competition submission: retain all packaged runtime and evidence files.
+!/up-projuct/**
+!/up-projuct.zip
+!docs/evidence/hotplug/*.log
+!docs/evidence/playback-info/*.log

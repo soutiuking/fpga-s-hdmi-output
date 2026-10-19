@@ -22,6 +22,7 @@ module tfmedia3_catalog #(
     output reg [7:0]   error_code,
     output reg [4:0]   entry_count,
     output reg [31:0]  total_sectors,
+    output reg [31:0] subtitle_lba,
 
     input      [4:0]   entry_select,
     output reg [7:0]   entry_media_type,
@@ -105,6 +106,7 @@ always @(posedge clk or posedge rst) begin
         error_code         <= ERR_NONE;
         entry_count        <= 5'd0;
         total_sectors      <= 32'd0;
+        subtitle_lba <= 0;
         byte_count         <= 10'd0;
         timeout_count      <= 32'd0;
         magic_ok           <= 1'b1;
@@ -216,6 +218,10 @@ always @(posedge clk or posedge rst) begin
                         10'd49: total_sectors[15:8]   <= sd_sec_read_data;
                         10'd50: total_sectors[23:16]  <= sd_sec_read_data;
                         10'd51: total_sectors[31:24]  <= sd_sec_read_data;
+                        10'd52: subtitle_lba[7:0] <= sd_sec_read_data;
+                        10'd53: subtitle_lba[15:8] <= sd_sec_read_data;
+                        10'd54: subtitle_lba[23:16] <= sd_sec_read_data;
+                        10'd55: subtitle_lba[31:24] <= sd_sec_read_data;
                         10'd508: stored_crc[7:0]      <= sd_sec_read_data;
                         10'd509: stored_crc[15:8]     <= sd_sec_read_data;
                         10'd510: stored_crc[23:16]    <= sd_sec_read_data;

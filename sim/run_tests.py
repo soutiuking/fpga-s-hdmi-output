@@ -102,6 +102,12 @@ def main():
             if 'PASS' not in result.stdout or any(t in result.stdout for t in ['FATAL:','FAIL','ERROR:']):
                 raise AssertionError(f'{top}: simulation did not pass\n{result.stderr}')
         tf=HDL/'tfmedia3'
+        from check_subtitles import host_tests
+        blob=host_tests(work)
+        rtl('tb_subtitle_loader',[tf/'subtitle_loader.v',SIM/'subtitle_bram_model.v'],['+blob='+str(blob)])
+        rtl('tb_subtitle_select',[tf/'subtitle_select.v'])
+        rtl('tb_configurable_scroll_text',[tf/'configurable_scroll_text.v',tf/'scroll_text_overlay.v',tf/'scroll_text_font.v',SIM/'subtitle_bram_model.v',HDL/'video_rgb_to_axis_640x480.v'])
+        rtl('tb_playback_info_overlay',[tf/'playback_info_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
         rtl('tb_player_volume_control',[tf/'player_volume_control.v',tf/'button_debounce_pulse.v'])
         rtl('tb_volume_bar_overlay',[tf/'volume_bar_overlay.v',HDL/'video_rgb_to_axis_640x480.v'])
         rtl('tb_brightness_gain',[tf/'volume_bar_overlay.v'])
@@ -134,10 +140,22 @@ def main():
             [f'+jpeg_bytes={len(late_frame)}','+jpeg_hex='+str(gap_vector)])
         subprocess.run([sys.executable,str(SIM/'check_top_recovery.py'),str(exe)],check=True)
         subprocess.run([sys.executable,str(SIM/'check_hdmi_cdc.py'),str(exe)],check=True)
+        subprocess.run([sys.executable,str(SIM/'check_storage_hotplug.py'),str(exe)],check=True)
         reader_sources=([tf/n for n in ['tfmedia3_reader_frontend.v','button_debounce_pulse.v',
-             'tfmedia3_catalog.v','tfmedia3_metadata.v','sd_sector_arbiter4.v','jpeg_sram_dma.v','pcm_audio_buffer.v']]+
-             [HDL/'memory'/n for n in ['sram_arbiter2.v','async_sram16_controller.v']])
+             'subtitle_loader.v','tfmedia3_catalog.v','tfmedia3_metadata.v','sd_sector_arbiter4.v','jpeg_sram_dma.v','pcm_audio_buffer.v']]+
+             [HDL/'memory'/n for n in ['sram_arbiter2.v','async_sram16_controller.v']]+[SIM/'subtitle_bram_model.v'])
         rtl('tb_reader_lifecycle',reader_sources,['+image='+str(movie)])
+        subtitle_movie=work/'three-subtitles.img'
+        subtitle_data=bytearray(movie.read_bytes())
+        subtitle_lba=len(subtitle_data)//512
+        subtitle_data+=bytes.fromhex(blob.read_text())
+        struct.pack_into('<II',subtitle_data,48,len(subtitle_data)//512,subtitle_lba)
+        subtitle_data[:512]=card.crc_sector(subtitle_data[:512])
+        subtitle_movie.write_bytes(subtitle_data);card.inspect(subtitle_movie)
+        rtl('tb_reader_lifecycle',reader_sources,['+image='+str(subtitle_movie),'+expect_subtitles=10'])
+        subtitle_data[subtitle_lba*512+200]^=1
+        subtitle_movie.write_bytes(subtitle_data)
+        rtl('tb_reader_lifecycle',reader_sources,['+image='+str(subtitle_movie)])
         rtl('tb_reader_catchup',reader_sources+[SIM/'tb_reader_lifecycle.v'],['+image='+str(catchup_movie)])
         if not args.quick:
             subprocess.run([sys.executable,str(SIM/'extract_first_jpeg.py'),str(golden),str(work/'golden_first_jpeg.hex')],check=True)

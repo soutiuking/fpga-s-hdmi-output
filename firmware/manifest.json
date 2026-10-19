@@ -1,29 +1,39 @@
 {
   "schema_version": 1,
-  "current": "firmware/10_player_picture_blend.bit",
+  "current": "firmware/13_player_hotplug.bit",
   "hardware_baseline": "firmware/08_player_avsync.bit",
   "device": "EG4S20BG256",
   "tool": "Tang Dynasty 6.2.168116",
   "validation": {
-    "date": "2026-10-18",
+    "date": "2026-10-19",
     "routed_timing": "passed",
     "hardware": "pending",
-    "setup_wns_ns": 1.729,
-    "hold_wns_ns": 0.003,
+    "setup_wns_ns": 0.227,
+    "hold_wns_ns": 0.022,
     "specialized_rtl_regression": "passed",
-    "quick_rtl_regression": "passed"
+    "quick_rtl_regression": "passed",
+    "build_id": "20261019-215059-170",
+    "place_seed": 11,
+    "explicit_post_route_fix_hold": true,
+    "functional_icons": "SW5 play/progress, SW6 film/media, SW7 clock/time",
+    "gui_smoke_test": "passed",
+    "subtitle_card_integration": "passed",
+    "physical_slice_usage": "4880/4900 MSlice; 4876/4900 LSlice",
+    "storage_hotplug_specialized_rtl": "passed",
+    "hotplug_hardware": "pending",
+    "hotplug_regression_evidence": "docs/evidence/hotplug/validation.json"
   },
   "resources": {
     "lut": {
-      "used": 15133,
+      "used": 16950,
       "total": 19600
     },
     "register": {
-      "used": 9856,
+      "used": 10939,
       "total": 19600
     },
     "bram9k": {
-      "used": 40,
+      "used": 53,
       "total": 64
     },
     "bram32k": {
@@ -75,6 +85,42 @@
     {
       "path": "firmware/reports/10_player_picture_blend/TFMEDIA3_Player_pr.timing",
       "sha256": "35ba484f525d0c290e4a0742a2d245674968b37e56cda13dadf3fcfb30896fc2"
+    },
+    {
+      "path": "firmware/11_player_playback_info.bit",
+      "sha256": "e7938a5028e902ceecf25cbf6e720da21b1178f0fd63b91337f3eb42ad573992"
+    },
+    {
+      "path": "firmware/reports/11_player_playback_info/TFMEDIA3_Player_phy.area",
+      "sha256": "f7db51d21e9055c2b0db38d1b6e9c9fb52d87e5c380075b466abb641472df2a9"
+    },
+    {
+      "path": "firmware/reports/11_player_playback_info/TFMEDIA3_Player_pr.timing",
+      "sha256": "211d77553847803f7ff126aa65e9a31686f21432522a05df3f5976f24ee8a9c2"
+    },
+    {
+      "path": "firmware/12_player_subtitles.bit",
+      "sha256": "2e29e6d99518cd7f1b960fe935f8156218f8b60901a93ae671d2daa841907af1"
+    },
+    {
+      "path": "firmware/reports/12_player_subtitles/TFMEDIA3_Player_phy.area",
+      "sha256": "42ebd7c5abbaa6040bb55f82c81a8810ab368173d16b7fa9bf6d18bf67213c4d"
+    },
+    {
+      "path": "firmware/reports/12_player_subtitles/TFMEDIA3_Player_pr.timing",
+      "sha256": "e0a52c5d8dbba363afdaab5101b4737ba43534dc3c34769c4eb16c1208dd8b00"
+    },
+    {
+      "path": "firmware/13_player_hotplug.bit",
+      "sha256": "f1c4e5998e8385385d529e2845d0864043395ebd5ca962037bf6b6d860791e5d"
+    },
+    {
+      "path": "firmware/reports/13_player_hotplug/TFMEDIA3_Player_phy.area",
+      "sha256": "c57496ca678422b9e9fffeb1dcb8576dbd2c31b73fe2a1155a5a19d52b9cb7c7"
+    },
+    {
+      "path": "firmware/reports/13_player_hotplug/TFMEDIA3_Player_pr.timing",
+      "sha256": "21df9e24140b54b4050895522d78d23a335c5142e860ad9d0100a4aafeb53467"
     }
   ]
 }

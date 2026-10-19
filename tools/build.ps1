@@ -1,6 +1,7 @@
 ﻿param(
     [ValidateSet('segtest','hdmitest','TFMEDIA3_Player')][string]$Target='TFMEDIA3_Player',
     [string]$TdRoot=$env:TD_ROOT,
+    [ValidateRange(0,2147483647)][int]$PlaceSeed=11,
     [switch]$PrepareOnly
 )
 $ErrorActionPreference='Stop'
@@ -30,6 +31,7 @@ foreach($taskStage in @('syn_1','phy_1')) {
         # the unpacked directory contains spaces (notably IpSDCList).
         $taskText=[regex]::Replace($taskText,'(?<!")(\.\./\.\./\.\./[^\s"}]+)','{$1}')
         $taskText=$taskText.Replace('../../../',($taskRoot.Replace('\','/')+'/'))
+        $taskText=[regex]::Replace($taskText,'set_param place seed \d+',"set_param place seed $PlaceSeed")
         [System.IO.File]::WriteAllText((Join-Path $taskDir $taskName),$taskText,$taskEncoding)
     }
     [System.IO.File]::WriteAllText((Join-Path $taskDir "$Target.prj"),$taskPrj,$taskEncoding)

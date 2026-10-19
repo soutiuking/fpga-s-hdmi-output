@@ -40,6 +40,8 @@ wire       ddc_scl_unused;
 tri1       ddc_sda_pullup;
 wire       reader_clk;
 wire board_rst, reader_rst;
+wire storage_reset,storage_busy;
+wire playback_rst=reader_rst | storage_reset;
 power_on_reset u_por(.clk(clk), .reset_n(key_reset_n), .rst(board_rst));
 reset_sync u_reader_reset(.clk(reader_clk), .async_rst(board_rst), .rst(reader_rst));
 wire presentation_busy, frame_presented;
@@ -65,6 +67,8 @@ wire [7:0] player_error;
 wire [7:0] debug_error;
 wire [3:0] player_state;
 wire       sd_initialized;
+storage_recovery u_storage_recovery(.clk(reader_clk),.rst(reader_rst),
+    .fault(player_error!=0),.sector_busy(storage_busy),.recovering(storage_reset));
 wire [63:0] debug_segments;
 wire       decode_sram_request;
 wire [18:0] decode_sram_address;
@@ -97,6 +101,24 @@ wire contrast_mode;
 wire [4:0] contrast;
 wire scroll_setting;
 wire wave_setting;
+wire subtitle_ram_we;wire [12:0] subtitle_ram_address;wire [15:0] subtitle_ram_data;
+wire [3:0] subtitle_count,subtitle_style_index;wire [30:0] subtitle_style_data;
+wire subtitle_next,subtitle_prev,subtitle_config_toggle,subtitle_config_ack;
+wire [35:0] subtitle_config_packet;
+subtitle_select u_subtitle_select(.clk(reader_clk),.rst(reader_rst),
+ .count(subtitle_count),.style_data(subtitle_style_data),
+ .next_pulse(subtitle_next),.prev_pulse(subtitle_prev),.ack_async(subtitle_config_ack),
+ .toggle(subtitle_config_toggle),.packet(subtitle_config_packet),.selected(subtitle_style_index));
+wire [2:0] info_setting;
+wire [31:0] info_position,info_length,info_rate;
+wire [4:0] info_media_count;
+wire info_valid;
+genvar info_switch;
+generate for(info_switch=0;info_switch<3;info_switch=info_switch+1) begin:g_info_switch
+    button_debounce_pulse #(.STABLE_CLKS(200_000)) u_switch(
+        .clk(reader_clk),.rst(reader_rst),.button_n(sw_n[info_switch+5]),
+        .pressed(info_setting[info_switch]),.pressed_pulse());
+end endgenerate
 button_debounce_pulse #(.STABLE_CLKS(200_000)) u_wave_switch (
     .clk(reader_clk), .rst(reader_rst), .button_n(sw_n[4]),
     .pressed(wave_setting), .pressed_pulse()
@@ -119,6 +141,7 @@ end
 player_volume_control u_volume (
     .clk(reader_clk), .rst(reader_rst), .sw0_n(sw_n[0]), .sw1_n(sw_n[1]), .sw2_n(sw_n[2]),
     .key_up_n(key_s1_n), .key_down_n(key_s2_n),
+    .subtitle_mode(scroll_setting && subtitle_count!=0),.subtitle_next(subtitle_next),.subtitle_prev(subtitle_prev),
     .next_key_n(next_key_n), .pause_key_n(pause_key_n),
     .volume_mode(volume_mode), .volume(volume),
     .brightness_mode(brightness_mode), .brightness(brightness),
@@ -198,13 +221,15 @@ assign debug_error = (player_error != 0) ? player_error :
                      (decode_error != 0) ? decode_error :
                      (audio_underflow ? 8'h41 : 8'h00);
 assign audio_playback_enable = display_valid && (media_type == 8'd2) &&
-                               !player_paused;
+                               !player_paused && !storage_reset && player_error==0;
 
 // The HDMI wrapper contains the verified clock/PHY/audio chain and the
 // SDRAM-backed 640x480 display path. It does not instantiate a FAT reader.
 tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
     .clk          (clk),
     .rst          (board_rst),
+    .media_reset  (storage_reset),
+    .audio_enable (audio_playback_enable),
     .reader_clk   (reader_clk),
     .mem_clk      (reader_mem_clk),
     .mem_clk_sft  (reader_mem_clk_sft),
@@ -224,8 +249,13 @@ tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
     .volume_setting(volume_mode), .volume_level(volume),
     .brightness_setting(brightness_mode), .brightness_level(brightness),
     .contrast_setting(contrast_mode), .contrast_level(contrast),
+    .subtitle_ram_we(subtitle_ram_we),.subtitle_ram_address(subtitle_ram_address),.subtitle_ram_data(subtitle_ram_data),
+    .subtitle_config_packet(subtitle_config_packet),.subtitle_config_toggle(subtitle_config_toggle),.subtitle_config_ack(subtitle_config_ack),
     .scroll_setting(scroll_setting), .picture_playing(picture_playing),
     .wave_setting(wave_setting),
+    .info_setting(info_setting),.info_position(info_position),.info_length(info_length),
+    .info_rate(info_rate),.info_media_index(media_index),.info_media_count(info_media_count),
+    .info_valid(info_valid && display_valid),
     .display_picture(media_type==8'd1),.pause_status(pause_status),
     .HDMI_CLK_P   (HDMI_CLK_P),
     .HDMI_D2_P    (HDMI_D2_P),
@@ -238,7 +268,7 @@ tfmedia3_hdmi_shell #(.TEST_PATTERN(TEST_PATTERN)) u_hdmi_shell (
 // The storage path owns the physical TF pins and fills the external SRAM.
 tfmedia3_reader_frontend #(.CLK_HZ(40_000_000)) u_reader (
     .clk           (reader_clk),
-    .rst           (reader_rst),
+    .rst           (playback_rst),
     .key_s1_n      (next_key_n),
     .key_s2_n      (pause_key_n),
     .sd_ncs        (sd_ncs),
@@ -275,7 +305,11 @@ tfmedia3_reader_frontend #(.CLK_HZ(40_000_000)) u_reader (
     .player_error  (player_error),
     .player_state  (player_state),
     .media_changing(media_changing),
-    .sd_initialized(sd_initialized)
+    .subtitle_ram_we(subtitle_ram_we),.subtitle_ram_address(subtitle_ram_address),.subtitle_ram_data(subtitle_ram_data),
+    .subtitle_count(subtitle_count),.subtitle_style_index(subtitle_style_index),.subtitle_style_data(subtitle_style_data),
+    .info_position(info_position),.info_length(info_length),.info_rate(info_rate),
+    .info_media_count(info_media_count),.info_valid(info_valid),
+    .sd_initialized(sd_initialized),.storage_busy(storage_busy)
 );
 
 // A failed decode must not keep a user media-switch request waiting forever
@@ -288,7 +322,7 @@ always @(posedge reader_clk or posedge reader_rst) begin
 end
 
 jpeg_decode_pipeline u_decode (
-    .clk(reader_clk), .rst(reader_rst | decode_recover),
+    .clk(reader_clk), .rst(playback_rst | decode_recover),
     .frame_cached(frame_cached), .cached_slot(cached_slot),
     .cached_bytes(cached_bytes), .target_slot(target_slot), .sram_request(decode_sram_request),
     .sram_address(decode_sram_address),
@@ -305,8 +339,8 @@ jpeg_decode_pipeline u_decode (
 
 // A frame is exposed only when both its decode and its presentation deadline
 // have occurred.  This freezes the selected SDRAM page while paused.
-always @(posedge reader_clk or posedge reader_rst) begin
-    if (reader_rst) begin
+always @(posedge reader_clk or posedge playback_rst) begin
+    if (playback_rst) begin
         presentation_submit <= 1'b0;
         display_valid        <= 1'b0;
         display_slot         <= 1'b0;

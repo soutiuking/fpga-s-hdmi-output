@@ -1,0 +1,29 @@
+[
+  {
+    "file": "gui-python-3.11.9-embed-amd64.zip",
+    "sha256": "009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b",
+    "bytes": 11249023,
+    "url": "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip",
+    "kind": "python"
+  },
+  {
+    "file": "gui-pillow-11.3.0-cp311-cp311-win_amd64.whl",
+    "sha256": "1a992e86b0dd7aeb1f053cd506508c0999d710a8f07b4c791c63843fc6a807ac",
+    "bytes": 6986055,
+    "url": "https://pypi.org/project/pillow/11.3.0/",
+    "kind": "wheel"
+  },
+  {
+    "file": "gui-tkinter-3.11-original.zip",
+    "sha256": "9c787e28a4a7de7bad3355f0a6dfd74d25377c99a645360b100483c02b9e25db",
+    "bytes": 3126700,
+    "url": "User-provided original portable tool; Python 3.11 tkinter and Tcl/Tk 8.6 runtime",
+    "kind": "tk"
+  },
+  {
+    "file": "imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
+    "sha256": "02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a",
+    "url": "https://pypi.org/project/imageio-ffmpeg/0.6.0/",
+    "bytes": 31246824
+  }
+]

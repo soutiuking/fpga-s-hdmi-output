@@ -14,7 +14,7 @@
 
 `td_project/*.al` 为源文件列表的唯一编辑入口。构建脚本从 `.al` 生成本次 `.prj`，结合 `tools/td_flow/<目标>/` 中的已验证流程，在新的 `build/<目标>-<时间戳>/syn_1` 和 `phy_1` 中执行；不需要复制旧 Runs 缓存。跨目录引用按当前位置计算，只有临时构建文件含本机绝对路径。
 
-主播放器使用已验证的 `set_param place seed 2`。脚本检查 TD 日志、bitgen 以及最终 SWNS/HWNS/STNS/HTNS。通过后将 bit 和时序报告复制到新的 `output/<目标>-<时间戳>/`；不覆盖 `firmware/` 中的实板基线。
+主播放器 11/12 版使用 `set_param place seed 3`，布线后显式执行 `fix_hold` 修复保持/复位撤除路径；10 版历史构建使用 seed 2。脚本检查 TD 日志、bitgen 以及最终 SWNS/HWNS/STNS/HTNS。通过后将 bit 和时序报告复制到新的 `output/<目标>-<时间戳>/`；不覆盖 `firmware/` 中的实板基线。
 
 仅检查文件引用和生成流程，不调用 TD：
 

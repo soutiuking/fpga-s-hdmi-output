@@ -169,7 +169,7 @@ proc opt_place_fun {} {
   }
 
 ### Editable zone for opt_place ###
-  set_param place seed 2
+  set_param place seed 11
   place
   update_timing -mode manhattan
   report_timing_summary -file ${prj_name}_place.timing
@@ -202,6 +202,8 @@ proc opt_route_fun {} {
     set_param flow qor_monitor on
     report_qor -step route -file route.qor
   }
+  # Explicit final hold repair also covers reset-removal paths missed by route.
+  fix_hold
   report_area -io_info -file ${prj_name}_phy.area
   update_timing -mode final
   report_timing_status -file ${prj_name}_phy.ts

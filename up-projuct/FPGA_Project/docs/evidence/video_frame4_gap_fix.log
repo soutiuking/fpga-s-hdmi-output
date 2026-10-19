@@ -1,0 +1,3 @@
+Image media=3 frame=4 bytes=26861 last_word_index=0x1A3B
+PASS full frame: bytes=26861 size%4=1 MAE=1.025888/255 PSNR=45.126dB
+PASS: requested real JPEG frames decoded and matched software pixels

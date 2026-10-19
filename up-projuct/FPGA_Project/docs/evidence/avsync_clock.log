@@ -1,0 +1,3 @@
+PASS: 55.72-second/1393-frame audio timeline has zero accumulated sample drift, pause and stalled PCM hold time
+PASS: last in-flight PCM sample is counted at pause edge so EOF cannot hang
+PASS: silent video uses 25-fps reader clock and completes after its last full period

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "image preview",
+    "video playback and seek",
+    "subtitle preview",
+    "no automatic card selection",
+    "removed card clears confirmation",
+    "smoke mode forbids physical writes",
+    "image+video+audio+subtitle pack",
+    "complete image validation"
+  ]
+}
